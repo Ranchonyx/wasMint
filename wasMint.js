@@ -59,13 +59,12 @@ class wasMintModule {
             //If the module exports a "main" method assign it, if not assign undefined
             this.potentialEntryPoint = undefined;
             this.wasmHasSignature("main") ? this.potentialEntryPoint = this.exports.main : undefined;
-    
-            this.wasMintDispatchEvent("wasMintInfo", "INFO", "Instantiated WASM!")
+
+            this.wasMintDispatchEvent("wasMintWASMLoaded", "INFO", "WASM module loaded.");
         }).catch(err => {
             this.wasMintDispatchEvent("wasMintError", "ERROR", `Error occured during WASM loading: ${err} !`)
         });
 
-        this.wasMintDispatchEvent("wasMintWASMLoaded", "INFO", "WASM module loaded.");
     }
 
     wasMintDispatchEvent(name, type, msg) {
