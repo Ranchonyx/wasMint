@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="wasMint.js"></script>
+    <script>
+      // Check for wasm support.
+      if (!('WebAssembly' in window)) {
+        alert('you need a browser with wasm support enabled :(');
+      }
+      var Module = null;
+
+      window.onload = () => {
+        addEventListener("wasMintError", (details) => {
+          console.error("wasMint Error", details.detail);
+        });
+        addEventListener("wasMintInfo", (details) => {
+          console.info("wasMint Info", details.detail);
+        })
+        addEventListener("wasMintWASMLoaded", (details) => {
+          console.info("wasMint has successfully loaded WASM!")
+        })
+
+        Module = new wasMintModule("wasMint.wasm");
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

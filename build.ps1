@@ -1,0 +1,1 @@
+emcc -s WASM=1 -o wasMint.wasm .\wasMint.c -Os --std=c99 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORTED_FUNCTIONS='["_main", "_malloc", "_free"]'
