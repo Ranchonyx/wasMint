@@ -8,18 +8,30 @@ var functionConfig = {
     }
 };
 
-var functions = {
 
-};
 
 var properties = {
 
 };
 
+var configuredFunctions = {
+
+};
+
 function configureFunctions(exports) {
-    Object.entries(this.exports).forEach(
-        element => typeof element[1] === "function" ? this.functions[element[0]] = element[1] : this.properties[element[0]] = element[1]
+    let tmpFunctions = {
+
+    };
+
+    Object.entries(exports).forEach(
+        element => typeof element[1] === "function" ? tmpFunctions[element[0]] = element[1] : properties[element[0]] = element[1]
     );
 
-
+    //Assign metadata to functions
+    for(funKey in tmpFunctions) {
+        if(Object.keys(functionConfig).includes(funKey)) {
+            configureFunctions.funKey = functionConfig[funKey];
+            configureFunctions.funKey.call = tmpFunctions[funKey];
+        }
+    }
 }
