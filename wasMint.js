@@ -8,10 +8,11 @@ class wasMintModule {
             }
         },
         env: {
-            _wasMint_js_print: (ptr, len) => debugPrint(ptr, len)
+            _wasMint_js_print: (ptr, len) => debugPrint(ptr, len),
+            emscripten_notify_memory_growth: (val) => console.info(`Memory growth! ${val}`)
         }
-    }, debugPrint = ((ptr, len) => {
-        console.log(`debugPrint(${len}b@${ptr}): ${this.wasmPtrToString(ptr, len)}`)
+    }, functionConfigOptions, debugPrint = ((ptr, len) => {
+        console.log(`debugPrint(${len}b@${ptr}): ${this.wasMintPtrToString(ptr, len)}`)
     })) {
         
         //Assign debugPrint to be callable from WASM / C
@@ -81,7 +82,7 @@ class wasMintModule {
         return (Object.keys(this.exports).includes(sig));
     }
 
-    wasmPtrToString(ptr, len) {
+    wasMintPtrToString(ptr, len) {
         console.info(`[wasMint] wasmPtrToString(ptr: ${ptr}, len: ${len});`);
         try {
             let array = new Uint8Array(this.memory.buffer, ptr, len);
@@ -94,7 +95,7 @@ class wasMintModule {
         }
     }
 
-    stringToWasmPtr(string) {
+    wasMintStringToPtr(string) {
         console.info(`[wasMint] stringToWasmPtr(string: ${string});`);
         let enc = new TextEncoder();
         let bytes = enc.encode(string);
@@ -107,5 +108,16 @@ class wasMintModule {
         console.info(`[wasMint] return ptr -> ${buffer};`);
         return ptr;
     }
+
+    wasMintPtrToFloat32Array(ptr, len) {
+        let array = new Float32Array(this.memory.buffer, ptr, len);
+        try {
+            return array;
+        } finally {
+            this.free(ptr)
+        }
+    }
+
+
 };
 
