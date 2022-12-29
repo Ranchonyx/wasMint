@@ -11,10 +11,10 @@
 
       window.onload = () => {
         addEventListener("wasMintError", (details) => {
-          console.error("wasMint Error", details.detail);
+          console.error("wasMint Error", `[${details.detail.type}] "${details.detail.msg}"`);
         });
         addEventListener("wasMintInfo", (details) => {
-          console.info("wasMint Info", details.detail);
+          console.debug("wasMint Info", `[${details.detail.type}] "${details.detail.msg}"`);
         })
         addEventListener("wasMintWASMLoaded", (details) => {
           console.info("wasMint has successfully loaded WASM!")

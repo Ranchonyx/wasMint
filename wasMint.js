@@ -34,7 +34,7 @@ class wasMintModule {
         this.functions = {};
 
         //Load and instantiate the WASM module
-        console.info(`Loading WASM from ${wasmPath}...`);
+        this.wasMintDispatchEvent("wasMintInfo", "INFO", `Loading WASM from ${wasmPath}...`);
         WebAssembly.instantiateStreaming(fetch(wasmPath), importConfig).then(obj => {
             this.internalModuleInstance = obj.instance;
             this.exports = obj.instance.exports;
@@ -56,7 +56,7 @@ class wasMintModule {
     
                 this.malloc = (size) => {
                     let ptr = this.exports.malloc(size);
-                    console.info(`[wasMint] malloc(size: ${size});\n${ptr}<-`);
+                    console.info(`[wasMint] malloc(size: ${size}) := ${ptr}`);
                     return ptr;
                 }
 
@@ -75,19 +75,21 @@ class wasMintModule {
             this.wasMintDispatchEvent("wasMintInfo", "INFO", "Configuring WASM functions...");
 
             //Assign metadata to functions
+            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Attempting to generate metadata for ${Object.keys(tmpFunctions).length} functions...`);
             for(let funKey in tmpFunctions) {
                 if(Object.keys(this.functionConfig).includes(funKey)) {
-                    console.info(`Generating Metadata for $${funKey}`);
                     this.functions[funKey] = this.functionConfig[funKey];
                     this.functions[funKey]._function = tmpFunctions[funKey];
+                    this.wasMintDispatchEvent("wasMintInfo", "INFO", `Generated metadata for $${funKey}!`);
                 }
             }
+            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Finished generation of ${Object.keys(this.functions).length} sets of metadata!`);
 
+            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Attempting to generate call wrappers for ${Object.keys(this.functions).length} exported functions...`)
             for(let funKey in this.functions) {
-                //console.log(this.functions[funKey]);
-                console.info(`Generating Call Wrapper for $${funKey}`);
-                this.functions[funKey].call = (...primaryArgs) => {
-                    this.functions[funKey].callback(`[${funKey}](${primaryArgs})!`);
+                    this.wasMintDispatchEvent("wasMintInfo", "INFO", `Generated call wrapper for $${funKey}!`);
+                    this.functions[funKey].call = (...primaryArgs) => {
+                    this.functions[funKey].callback(`$${funKey}(${primaryArgs})`);
                     if(primaryArgs.length < 0 ||
                       primaryArgs.length > this.functions[funKey].params.length ||
                       primaryArgs.length < this.functions[funKey].params.length) {
@@ -112,7 +114,6 @@ class wasMintModule {
                                 tmpArgs.push(this.wasMintStringToPtr(arg));
                                 break;
                             default:
-                                //console.log(_typeof(arg))
                                 tmpArgs.push(this.wasMintArrayToPtr(arg, _typeof(arg)));
                                 break;
                             }
@@ -191,11 +192,12 @@ class wasMintModule {
                         return finalResult;
                     }
                 }
-                }
+            }
+            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Generated call wrappers for ${Object.keys(this.functions).length} exported functions!`)
             }).catch(err => {
                 this.wasMintDispatchEvent("wasMintError", "ERROR", `Error occured during WASM loading: ${err} !`);
             });
-        }
+    }
 
     wasMintDispatchEvent(name, type, msg) {
         if(type === "ERROR") {
@@ -215,12 +217,10 @@ class wasMintModule {
     }
 
     wasMintPtrToString(ptr, len) {
-        //console.info(`[wasMint] wasmPtrToString(ptr: ${ptr}, len: ${len});`);
         try {
             let array = new Uint8Array(this.memory.buffer, ptr, len);
             let dec = new TextDecoder();
             let string = dec.decode(array);
-            //console.info(`[wasMint] return ${string};`);
             return string;
         } finally {
             this.free(ptr);
@@ -228,7 +228,6 @@ class wasMintModule {
     }
 
     wasMintStringToPtr(string) {
-        //console.info(`[wasMint] stringToWasmPtr(string: ${string});`);
         let enc = new TextEncoder();
         let bytes = enc.encode(string);
 
@@ -236,8 +235,6 @@ class wasMintModule {
 
         let buffer = new Uint8Array(this.memory.buffer, ptr, bytes.byteLength + 1);
         buffer.set(bytes);
-
-        //console.info(`[wasMint] return ptr -> ${buffer};`);
         return ptr;
     }
 
@@ -251,11 +248,9 @@ class wasMintModule {
     }
 
     wasMintArrayToPtr(array, type) {
-        //console.log("allocating ", array.byteLength, "bytes")
         let ptr = this.malloc(array.byteLength);
 
         let mkbuf = (buf, p, len, type) => {
-            //console.log("mkbuf ", buf, p, len, type)
             let ntype = {
                 "Int8Array": Int8Array,
                 "Uint8Array": Uint8Array,
@@ -273,9 +268,7 @@ class wasMintModule {
         }
 
         let buffer = mkbuf(this.memory.buffer, ptr, array.byteLength + 1, type);
-        console.log(buffer)
         buffer.set(array);
-        console.log("PTR: ", ptr);
         return ptr;
     }
 };
