@@ -89,6 +89,19 @@ WASMINT_EXPORT float* _wasMint_8xf32x4_mul(float a, float b, float c, float d, f
     return s;
 }
 
+WASMINT_EXPORT float* _wasMint_arrayIOTest(float* a, size_t len) {
+
+    _wasMint_print(_wasMint_fmt("%d arguments, first 2: %f, %f", len, a[0], a[1]));
+
+    float* b = (float*) malloc(len * sizeof(float));
+    for(size_t i = 0; i < len; i++) {
+        b[i] = a[i] * 2;
+    }
+    float* c = (float*) malloc(len * sizeof(float));
+    memcpy(c, b, len*sizeof(float));
+    return c;
+}
+
 WASMINT_EXPORT int main() {
     byte* fmt = _wasMint_fmt("Hello, %s!", "World");
     
