@@ -75,7 +75,7 @@ class wasMintModule {
             this.wasMintDispatchEvent("wasMintInfo", "INFO", "Configuring WASM functions...");
 
             //Assign metadata to functions
-            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Attempting to generate metadata for ${Object.keys(tmpFunctions).length} functions...`);
+            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Attempting to generate metadata for ${Object.keys(functionConfig).length} configurable functions...`);
             for(let funKey in tmpFunctions) {
                 if(Object.keys(this.functionConfig).includes(funKey)) {
                     this.functions[funKey] = this.functionConfig[funKey];
@@ -193,7 +193,7 @@ class wasMintModule {
                     }
                 }
             }
-            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Generated call wrappers for ${Object.keys(this.functions).length} exported functions!`)
+            this.wasMintDispatchEvent("wasMintInfo", "INFO", `Finished generation of call wrappers for ${Object.keys(this.functions).length} exported functions!`)
             }).catch(err => {
                 this.wasMintDispatchEvent("wasMintError", "ERROR", `Error occured during WASM loading: ${err} !`);
             });
