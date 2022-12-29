@@ -110,7 +110,11 @@ class wasMintModule {
     }
 
     wasMintPtrToFloat32Array(ptr, len) {
+<<<<<<< HEAD
         let array = new Float32Array(this.memory.buffer, ptr, len);
+=======
+        let array = new Float32Array(this.memory.buffer.slice(ptr, ptr+(len*4)));
+>>>>>>> refs/remotes/origin/master
         try {
             return array;
         } finally {
@@ -118,6 +122,9 @@ class wasMintModule {
         }
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/origin/master
 };
 
