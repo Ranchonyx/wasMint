@@ -66,11 +66,11 @@
             return: {
               type: "Float32Array",
               length: "A1"
-            }, callback: (args) => {console.log(args)}
+            },
+            callback: (args) => console.log(args)
           }
         };
         
-
         Module = new wasMintModule("wasMint.wasm", undefined, functionConfig, undefined);
       }
     </script>

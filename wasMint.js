@@ -74,131 +74,128 @@ class wasMintModule {
             this.wasMintDispatchEvent("wasMintWASMLoaded", "INFO", "WASM module loaded.");
             this.wasMintDispatchEvent("wasMintInfo", "INFO", "Configuring WASM functions...");
 
-
             //Assign metadata to functions
             for(let funKey in tmpFunctions) {
                 if(Object.keys(this.functionConfig).includes(funKey)) {
+                    console.info(`Generating Metadata for $${funKey}`);
                     this.functions[funKey] = this.functionConfig[funKey];
                     this.functions[funKey]._function = tmpFunctions[funKey];
                 }
             }
 
             for(let funKey in this.functions) {
-                console.log(this.functions[funKey]);
-                
+                //console.log(this.functions[funKey]);
+                console.info(`Generating Call Wrapper for $${funKey}`);
                 this.functions[funKey].call = (...primaryArgs) => {
-                    this.functions[funKey].callback(`Called [${funKey}]!`);
+                    this.functions[funKey].callback(`[${funKey}](${primaryArgs})!`);
                     if(primaryArgs.length < 0 ||
                       primaryArgs.length > this.functions[funKey].params.length ||
                       primaryArgs.length < this.functions[funKey].params.length) {
                           throw new Error(`Invalid parameter count of [${primaryArgs.length}] for [${funKey}]`);
                     }
                 
-                let _typeof = (val) => {return Object.prototype.toString.call(val).slice(8, -1);}
-                for(let i = 0; i < this.functions[funKey].params.length; i++) {
-                    if(_typeof(primaryArgs[i]) !== this.functions[funKey].params[i]) {
-                        throw new Error(`Invalid parameter type of [${typeof primaryArgs[i]}] instead of [${this.functions[funKey].params[i]}] at [${i}] for [${funKey}]`);
-                    }
-                }
-
-                let castArgs = (args) => {
-                    let tmpArgs = [];
-                    for(let arg of args) {
-                        switch(_typeof(arg)) {
-                          case "Number":
-                            tmpArgs.push(Number(arg));
-                            break;
-                          case "String":
-                            tmpArgs.push(this.wasMintStringToPtr(arg));
-                            break;
-                          default:
-                            //console.log(_typeof(arg))
-                            tmpArgs.push(this.wasMintArrayToPtr(arg, _typeof(arg)));
-                            break;
+                    let _typeof = (val) => {return Object.prototype.toString.call(val).slice(8, -1);}
+                    for(let i = 0; i < this.functions[funKey].params.length; i++) {
+                        if(_typeof(primaryArgs[i]) !== this.functions[funKey].params[i]) {
+                            throw new Error(`Invalid parameter type of [${typeof primaryArgs[i]}] instead of [${this.functions[funKey].params[i]}] at [${i}] for [${funKey}]`);
                         }
-                      }                      
-                    return tmpArgs;
-                }
-                console.log(primaryArgs)
-                let finalArgs = castArgs(primaryArgs);
-                let primaryResult = this.functions[funKey]._function(...finalArgs);
+                    }
 
-                let castResult = (ptr, len) => {
-                    switch (this.functions[funKey].return.type) {
-                        case "Number":
-                            return new Number(ptr);
-                            break;
-                        case "String":
-                            return this.wasMintPtrToString(ptr, len);
-                            break;
-                        case "Int8Array":
-                            return new Int8Array(this.memory.buffer.slice(ptr, ptr+(len * 1)));
-                            break;
-                        case "Uint8Array":
-                            return new Uint8Array(this.memory.buffer.slice(ptr, ptr+(len * 1)))
-                            break;
-                        case "Uint8ClampedArray":
-                            return new Uint8ClampedArray(this.memory.buffer.slice(ptr, ptr+(len * 1)));
-                            break;
-                        case "Int16Array":
-                            return new Int16Array(this.memory.buffer.slice(ptr, ptr+(len * 2)));
-                            break;
-                        case "Uint16Array":
-                            return new Uint16Array(this.memory.buffer.slice(ptr, ptr+(len * 2)));
-                            break;
-                        case "Int32Array":
-                            return new Int32Array(this.memory.buffer.slice(ptr, ptr+(len * 4)));
-                            break;
-                        case "Uint32Array":
-                            return new Uint32Array(this.memory.buffer.slice(ptr, ptr+(len * 4)));
-                            break;
-                        case "Float32Array":
-                            return new Float32Array(this.memory.buffer.slice(ptr, ptr+(len * 4)));
-                            break;
-                        case "Float64Array":
-                            return new Float64Array(this.memory.buffer.slice(ptr, ptr+(len * 8)))
-                            break;
-                        case "BigInt64Array":
-                            return new BigInt64Array(this.memory.buffer.slice(ptr, ptr+(len * 8)));
-                            break;
-                        case "BigUint64Array":
-                            return new BigUint64Array(this.memory.buffer.slice(ptr, ptr+(len * 8)));
-                            break;
-                        case "Undefined":
-                            return void 0 //undefined alias;
-                            break;
-                        default:
-                            return new Number(ptr);
-                            break;
+                    let castArgs = (args) => {
+                        let tmpArgs = [];
+                        for(let arg of args) {
+                            switch(_typeof(arg)) {
+                            case "Number":
+                                tmpArgs.push(Number(arg));
+                                break;
+                            case "String":
+                                tmpArgs.push(this.wasMintStringToPtr(arg));
+                                break;
+                            default:
+                                //console.log(_typeof(arg))
+                                tmpArgs.push(this.wasMintArrayToPtr(arg, _typeof(arg)));
+                                break;
+                            }
+                        }
+                        return tmpArgs;
+                    }
+                    let finalArgs = castArgs(primaryArgs);
+                    let primaryResult = this.functions[funKey]._function(...finalArgs);
+
+                    let castResult = (ptr, len) => {
+                        switch (this.functions[funKey].return.type) {
+                            case "Number":
+                                return new Number(ptr);
+                                break;
+                            case "String":
+                                return this.wasMintPtrToString(ptr, len);
+                                break;
+                            case "Int8Array":
+                                return new Int8Array(this.memory.buffer.slice(ptr, ptr+(len * 1)));
+                                break;
+                            case "Uint8Array":
+                                return new Uint8Array(this.memory.buffer.slice(ptr, ptr+(len * 1)))
+                                break;
+                            case "Uint8ClampedArray":
+                                return new Uint8ClampedArray(this.memory.buffer.slice(ptr, ptr+(len * 1)));
+                                break;
+                            case "Int16Array":
+                                return new Int16Array(this.memory.buffer.slice(ptr, ptr+(len * 2)));
+                                break;
+                            case "Uint16Array":
+                                return new Uint16Array(this.memory.buffer.slice(ptr, ptr+(len * 2)));
+                                break;
+                            case "Int32Array":
+                                return new Int32Array(this.memory.buffer.slice(ptr, ptr+(len * 4)));
+                                break;
+                            case "Uint32Array":
+                                return new Uint32Array(this.memory.buffer.slice(ptr, ptr+(len * 4)));
+                                break;
+                            case "Float32Array":
+                                return new Float32Array(this.memory.buffer.slice(ptr, ptr+(len * 4)));
+                                break;
+                            case "Float64Array":
+                                return new Float64Array(this.memory.buffer.slice(ptr, ptr+(len * 8)))
+                                break;
+                            case "BigInt64Array":
+                                return new BigInt64Array(this.memory.buffer.slice(ptr, ptr+(len * 8)));
+                                break;
+                            case "BigUint64Array":
+                                return new BigUint64Array(this.memory.buffer.slice(ptr, ptr+(len * 8)));
+                                break;
+                            case "Undefined":
+                                return void 0; //undefined alias
+                                break;
+                            default:
+                                return new Number(ptr);
+                                break;
+                        }
+                    }
+
+                    //Let castResult decide what should be returned
+                    let returnLength = this.functions[funKey].return.length;
+
+                    if(_typeof(returnLength) !== "Number") {
+                        returnLength = finalArgs[returnLength.split('')[1]];
+                    }
+
+                    let finalResult = castResult(primaryResult, returnLength);
+                    
+                    //Handle void function without a return value
+                    if(this.functions[funKey].return.type === "Void") {
+                        return;
+                    } else if(_typeof(finalResult) !== this.functions[funKey].return.type) {
+                        //Return type check via more accurate typeof
+                        throw new Error(`Invalid return type configuration of [${typeof finalResult}] instead of [${this.functions[funKey].return.type}] for [${funKey}]`);
+                    } else {
+                        return finalResult;
                     }
                 }
-
-                //Let castResult decide what should be returned
-                let returnLength = this.functions[funKey].return.length;
-
-                if(_typeof(returnLength) !== "Number") {
-                    returnLength = finalArgs[returnLength.split('')[1]];
-                    console.log("return length set to parameter index ", returnLength);
                 }
-
-                let finalResult = castResult(primaryResult, returnLength);
-                
-                //Handle void function without a return value
-
-                //Return type check via more accurate typeof
-                if(this.functions[funKey].return.type === "Void") {
-                    return;
-                } else if(_typeof(finalResult) !== this.functions[funKey].return.type) {
-                    throw new Error(`Invalid return type configuration of [${typeof finalResult}] instead of [${this.functions[funKey].return.type}] for [${funKey}]`);
-                } else {
-                    return finalResult;
-                }
-              }
-            }
-        }).catch(err => {
-            this.wasMintDispatchEvent("wasMintError", "ERROR", `Error occured during WASM loading: ${err} !`);
-        });
-    }
+            }).catch(err => {
+                this.wasMintDispatchEvent("wasMintError", "ERROR", `Error occured during WASM loading: ${err} !`);
+            });
+        }
 
     wasMintDispatchEvent(name, type, msg) {
         if(type === "ERROR") {
@@ -254,11 +251,11 @@ class wasMintModule {
     }
 
     wasMintArrayToPtr(array, type) {
-        console.log("allocating ", array.byteLength, "bytes")
+        //console.log("allocating ", array.byteLength, "bytes")
         let ptr = this.malloc(array.byteLength);
 
         let mkbuf = (buf, p, len, type) => {
-            console.log("mkbuf ", buf, p, len, type)
+            //console.log("mkbuf ", buf, p, len, type)
             let ntype = {
                 "Int8Array": Int8Array,
                 "Uint8Array": Uint8Array,
