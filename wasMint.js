@@ -1,4 +1,4 @@
-class Void {
+class wasMintVoid {
     constructor() {
 
     }
@@ -70,11 +70,13 @@ class wasMintModule {
                     //Shim malloc and free calls to display debug output
                     this.free = (ptr) => {
                         console.info(`[wasMint] free(ptr: ${ptr});`);
+                        if(ptr === 0) throw new Error("[wasMint] Memory deallocation error, attempted to call free(ptr); with ptr = 0!");
                         this.exports.free(ptr);
                     }
         
                     this.malloc = (size) => {
                         let ptr = this.exports.malloc(size);
+                        if(size === 0) throw new Error("[wasMint] Memory allocation error, attempted to call malloc(size); with size = 0!");
                         console.info(`[wasMint] malloc(size: ${size}) := ${ptr}`);
                         return ptr;
                     }
@@ -293,5 +295,38 @@ class wasMintModule {
         let buffer = new this.typedArrCtors[type](this.memory.buffer, ptr, array.length, type);
         buffer.set(array);
         return ptr;
+    }
+}
+class wasMintModuleManager {
+    *genID() {
+        let index = 0;
+        
+        while(true) {
+          yield index++;
+       }
+    }
+
+    wasMintModuleIDGenerator = this.genID();
+
+    nextID = () => this.wasMintModuleIDGenerator.next().value;
+
+    constructor(maxModulePoolSize) {
+        this._modules = [];
+        this.maxModulePoolSize = maxModulePoolSize;
+        this.modulePoolSize = 0;
+    }
+
+    addModule(wasMintModule, name) {
+        if(!this._modules.includes({name: name, module: wasMintModule})) {
+            console.log(this.modulePoolSize + 1, this.maxModulePoolSize)
+            if(++this.modulePoolSize != this.maxModulePoolSize) {
+                this._modules[this.nextID()] = {name: name, module: wasMintModule}
+            } else {
+                this.modulePoolSize--;
+                console.warn(`Skipping module addition of module ${name} due to module pool size.`);
+            }
+        } else {
+            console.warn(`Skipping module addition of module ${name} because it already exists.`);
+        }
     }
 }
