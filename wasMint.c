@@ -129,21 +129,12 @@ WASMINT_EXPORT uint32_t* _wasMint_arrayXOR(uint32_t* a, size_t alen, uint32_t* b
     for(size_t i = 0; i < retlen; i++) {
         c[i] = a[i] ^ b[i];
     }
-    __asm__("i32.const 5; i32.const 5; i32.add");
     return c;
 }
 
-WASMINT_EXPORT wasMint_bigint _wasMint_fib(int n) {
-    wasMint_bigint fnow = 0, fnext = 1, tempf;
-	while(--n>0){
-		tempf = fnow + fnext;
-		fnow = fnext;
-		fnext = tempf;
-		}
-        if(fnext > INT64_MAX) return -1;
-		return fnext;	
-}
-
 WASMINT_EXPORT int main() {
+    wasMint_string startup_message = "wasMint Initialized!";
+    _wasMint_js_print(startup_message, strlen(startup_message));
+
     return 0;
 }
