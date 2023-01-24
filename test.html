@@ -3,13 +3,9 @@
   <head>
     <script src="wasMint.js"></script>
     <script>
-      // Check for wasm support.
-      if (!('WebAssembly' in window)) {
-        alert('you need a browser with wasm support enabled :(');
-      }
       var Module = null;
 
-      window.onload = () => {
+      window.onload = async () => {
         addEventListener("wasMintError", (details) => {
           console.error("wasMint Error", `[${details.detail.type}] "${details.detail.msg}"`);
         });
@@ -20,57 +16,7 @@
           console.info("wasMint has successfully loaded WASM!")
         })
 
-        let functionConfig = {
-          "_wasMint_8xf32x4_add": {
-            params: ["Number", "Number", "Number", "Number", "Number", "Number", "Number", "Number"],
-            return: {
-              type: "Float32Array",
-              length: 4
-            },
-            callback: (args) => console.log(args)
-          },
-          "_wasMint_8xf32x4_sub": {
-            params: ["Number", "Number", "Number", "Number", "Number", "Number", "Number", "Number"],
-            return: {
-              type: "Float32Array",
-              length: 4
-            },
-            callback: (args) => console.log(args)
-          },
-          "_wasMint_8xf32x4_mul": {
-            params: ["Number", "Number", "Number", "Number", "Number", "Number", "Number", "Number"],
-            return: {
-              type: "Float32Array",
-              length: 4
-            },
-            callback: (args) => console.log(args)
-          },
-          "_wasMint_8xf32x4_div": {
-            params: ["Number", "Number", "Number", "Number", "Number", "Number", "Number", "Number"],
-            return: {
-              type: "Float32Array",
-              length: 4
-            },
-            callback: (args) => console.log(args)
-          },
-          "_wasMint_print": {
-            params: ["String"],
-            return: {
-              type: "Void",
-              length: 0
-            },
-            callback: (args) => console.log(args)
-          },
-          "_wasMint_arrayIOTest": {
-            params: ["Float32Array", "Number"],
-            return: {
-              type: "Float32Array",
-              length: "A1"
-            },
-            callback: (args) => console.log(args)
-          }
-        };
-        
+        let functionConfig = await fetch("functionConfig.json").then(cfg => cfg.json());
         Module = new wasMintModule("wasMint.wasm", undefined, functionConfig, undefined);
       }
     </script>
