@@ -1,6 +1,6 @@
 class Void {
     constructor() {
-
+        //Fill the void in my soul due to lack of affection by maidens
     }
 }
 
