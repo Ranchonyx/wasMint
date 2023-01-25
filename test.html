@@ -3,7 +3,7 @@
   <head>
     <script src="wasMint.js"></script>
     <script>
-      var Module = null;
+      const Manager = new wasMintModuleManager();
 
       window.onload = async () => {
         addEventListener("wasMintError", (details) => {
@@ -28,7 +28,8 @@
         let functionConfig = await fetch("functionConfig.json").then((cfg) =>
           cfg.json()
         );
-        Module = new wasMintModule("wasMint.wasm", functionConfig, true, true);
+        Manager.addModule(new wasMintModule("wasMint.wasm", functionConfig, false, false), "Mod1");
+        
       };
     </script>
   </head>

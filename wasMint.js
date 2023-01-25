@@ -4,6 +4,14 @@ class wasMintVoid {
   }
 }
 
+const __classof = (obj) => {
+  return Object.getPrototypeOf(obj).constructor.name;
+};
+
+const __strtypeof = (val) => {
+  return Object.prototype.toString.call(val).slice(8, -1);
+};
+
 class wasMintModule {
   #__functions__ = {};
   #functionConfig = {};
@@ -127,7 +135,7 @@ class wasMintModule {
               console.info(`[wasMint] free(ptr: ${ptr});`);
             };
 
-            this.malloc = (size) => {
+            this.#malloc = (size) => {
               if (size <= 0) {
                 throw new Error(
                   "[wasMint] Memory allocation error, attempted to call malloc(size); with size = 0!"
@@ -178,13 +186,21 @@ class wasMintModule {
             this.potentialEntryPoint = this.#exports.main;
             this.stateInitialised = false;
             this.init = () => {
-              this.wasMintDispatchEvent(
-                "wasMintInfo",
-                "INFO",
-                "WASM Module initialised."
-              );
-              this.potentialEntryPoint();
-              this.stateInitialised = true;
+              if (this.stateInitialised === false) {
+                this.wasMintDispatchEvent(
+                  "wasMintInfo",
+                  "INFO",
+                  "WASM Module initialised."
+                );
+                this.potentialEntryPoint();
+                this.stateInitialised = true;
+              } else {
+                this.wasMintDispatchEvent(
+                  "wasMintInfo",
+                  "INFO",
+                  "WASM Module already initialised."
+                );
+              }
             };
           }
 
@@ -257,9 +273,6 @@ class wasMintModule {
                 );
               }
 
-              let __strtypeof = (val) => {
-                return Object.prototype.toString.call(val).slice(8, -1);
-              };
               for (
                 let i = 0;
                 i < this.#__functions__[funKey].params.length;
@@ -523,7 +536,7 @@ class wasMintModule {
     let enc = new TextEncoder();
     let bytes = enc.encode(string);
 
-    let ptr = this.malloc(bytes.byteLength);
+    let ptr = this.#malloc(bytes.byteLength);
 
     let buffer = new Uint8Array(this.memory.buffer, ptr, bytes.byteLength + 1);
     buffer.set(bytes);
@@ -531,7 +544,7 @@ class wasMintModule {
   }
 
   wasMintArrayToPtr(array, type) {
-    let ptr = this.malloc(array.byteLength);
+    let ptr = this.#malloc(array.byteLength);
 
     let buffer = new this.typedArrCtors[type](
       this.memory.buffer,
@@ -564,6 +577,9 @@ class wasMintModuleManager {
   }
 
   addModule(wasMintModule, name) {
+    if (__classof(wasMintModule) !== "wasMintModule") {
+      return false;
+    }
     let aF = false;
     if (name === undefined || name === "") return false;
     for (const n of this.__modules__.values()) {
