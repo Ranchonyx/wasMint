@@ -7,23 +7,30 @@
 
       window.onload = async () => {
         addEventListener("wasMintError", (details) => {
-          console.error("wasMint Error", `[${details.detail.type}] "${details.detail.msg}"`);
+          console.error(
+            "wasMint Error",
+            `[${details.detail.type}] "${details.detail.msg}"`
+          );
         });
         addEventListener("wasMintInfo", (details) => {
-          console.debug("wasMint Info", `[${details.detail.type}] "${details.detail.msg}"`);
-        })
+          console.debug(
+            "wasMint Info",
+            `[${details.detail.type}] "${details.detail.msg}"`
+          );
+        });
         addEventListener("wasMintWASMLoaded", (details) => {
-          console.info("wasMint has successfully loaded WASM!")
-        })
+          console.info("wasMint has successfully loaded WASM!");
+        });
         addEventListener("wasMintWASMConfigured", (details) => {
-          console.info("wasMint Module configuration success!")
-        })
+          console.info("wasMint Module configuration success!");
+        });
 
-        let functionConfig = await fetch("functionConfig.json").then(cfg => cfg.json());
-        Module = new wasMintModule("wasMint.wasm", undefined, functionConfig, undefined);
-      }
+        let functionConfig = await fetch("functionConfig.json").then((cfg) =>
+          cfg.json()
+        );
+        Module = new wasMintModule("wasMint.wasm", functionConfig, true);
+      };
     </script>
   </head>
-  <body>
-  </body>
+  <body></body>
 </html>

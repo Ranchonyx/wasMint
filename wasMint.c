@@ -24,10 +24,15 @@ byte* _wasMint_fmt(wasMint_string fmt, ...) {
 
 WASMINT_EXPORT void _wasMint_print(wasMint_string str) {
     size_t len = strlen(str);
-    byte* buf = (byte*) malloc(len + 1);
-    
-    strncpy(buf, str, len);
-    _wasMint_js_print(str, len);
+
+    if(len > 512) {
+            return;
+    } else {
+        byte* buf = (byte*) malloc(len + 1);
+        
+        strncpy(buf, str, len);
+        _wasMint_js_print(str, len);
+    }
 }
 
 //SIMD Stuff: <param_count>x<type>x<return_count>_<operation>

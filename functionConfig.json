@@ -13,7 +13,8 @@
     "return": {
       "type": "Float32Array",
       "length": 4
-    }
+    },
+    "showCallback": false
   },
   "_wasMint_8xf32x4_sub": {
     "params": [
@@ -29,7 +30,8 @@
     "return": {
       "type": "Float32Array",
       "length": 4
-    }
+    },
+    "showCallback": false
   },
   "_wasMint_8xf32x4_mul": {
     "params": [
@@ -45,7 +47,8 @@
     "return": {
       "type": "Float32Array",
       "length": 4
-    }
+    },
+    "showCallback": false
   },
   "_wasMint_8xf32x4_div": {
     "params": [
@@ -61,7 +64,8 @@
     "return": {
       "type": "Float32Array",
       "length": 4
-    }
+    },
+    "showCallback": false
   },
   "_wasMint_print": {
     "params": ["String"],
@@ -75,20 +79,23 @@
     "return": {
       "type": "Float32Array",
       "length": "A1"
-    }
+    },
+    "showCallback": false
   },
   "_wasMint_fib": {
     "params": ["Number"],
     "return": {
       "type": "BigInt",
       "length": 1
-    }
+    },
+    "showCallback": false
   },
   "_wasMint_arrayXOR": {
     "params": ["Uint32Array", "Number", "Uint32Array", "Number"],
     "return": {
       "type": "Uint32Array",
       "length": "J A1 < A3 ? A1 : A3"
-    }
+    },
+    "showCallback": false
   }
 }
