@@ -310,23 +310,38 @@ class wasMintModuleManager {
 
     nextID = () => this.wasMintModuleIDGenerator.next().value;
 
-    constructor(maxModulePoolSize) {
+    constructor(maxModulePoolSize = 0xF, allowDuplicates = false) {
         this._modules = [];
         this.maxModulePoolSize = maxModulePoolSize;
         this.modulePoolSize = 0;
+        this.allowDuplicates = allowDuplicates;
     }
 
     addModule(wasMintModule, name) {
-        if(!this._modules.includes({name: name, module: wasMintModule})) {
-            console.log(this.modulePoolSize + 1, this.maxModulePoolSize)
-            if(++this.modulePoolSize != this.maxModulePoolSize) {
+        let aF = false;
+        for(const n of this._modules.values()) {
+            if(this.allowDuplicates === true) {
+                break;
+            }
+            if(n.name === name) aF = true; break;
+        }
+
+        if(!aF) {
+            if(this.modulePoolSize++ != this.maxModulePoolSize) {
                 this._modules[this.nextID()] = {name: name, module: wasMintModule}
             } else {
                 this.modulePoolSize--;
-                console.warn(`Skipping module addition of module ${name} due to module pool size.`);
+                console.warn(`Skipping module addition of module "${name}" due to module pool size threshold.`);
             }
         } else {
-            console.warn(`Skipping module addition of module ${name} because it already exists.`);
+            console.warn(`Skipping module addition of module "${name}" because it already exists.`);
+        }
+    }
+
+    removeModule(name) {
+        console.log(this._modules)
+        for(const n of this._modules) {
+            if(n.name === name) this._modules[name] = 0xCAFEBABE;
         }
     }
 }
