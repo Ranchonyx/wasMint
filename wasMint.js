@@ -506,4 +506,10 @@ class wasMintModuleManager {
     }
     return false;
   }
+
+  initAll() {
+    this.__modules__.forEach((mod) => {
+      if(Object.keys(mod).includes("init")) mod.init();
+    })
+  }
 }
