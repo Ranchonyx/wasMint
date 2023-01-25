@@ -1,9 +1,11 @@
-# wasmtest
-uh yeah
-like, get emscripten, can't do anything without that really.
-just run the powershell script and go start a python http server
-py -m http.server
-or something lol
+# wasMint
+Requirements:
+    Emsdk (Emscripten SDK)
+    Python
+    A web browser (No shit)
+    Any source code editor
 
-in any case, then afterwards open the html file and check it out via
-debug console.
+## Story
+    > "I fucking hate emscripten's glue code!" I thought to myself one sunn day at work
+    > That's it. I'm trying to make my own sort of ... WASM framework/runtime/thing
+## Description
