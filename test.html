@@ -15,6 +15,9 @@
         addEventListener("wasMintWASMLoaded", (details) => {
           console.info("wasMint has successfully loaded WASM!")
         })
+        addEventListener("wasMintWASMConfigured", (details) => {
+          console.info("wasMint Module configuration success!")
+        })
 
         let functionConfig = await fetch("functionConfig.json").then(cfg => cfg.json());
         Module = new wasMintModule("wasMint.wasm", undefined, functionConfig, undefined);

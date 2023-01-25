@@ -5,43 +5,7 @@
 #include <string.h>
 #include <xmmintrin.h>
 #include <wasm_simd128.h>
-
-typedef char byte;
-typedef char* wasMint_bytearray;
-typedef const wasMint_bytearray wasMint_string;
-typedef uint64_t wasMint_bigint;
-
-#define __fl4size 4 * sizeof(float)
-#define WASMINT_EXPORT __attribute__((used))
-#define WASMINT_IMPORT extern __attribute__((unused))
-
-#pragma region wasMint_FS
-
-struct fs_node;
-typedef uint32_t (*read_type_t)(struct fs_node*,uint32_t,uint32_t,uint8_t*);
-typedef uint32_t (*write_type_t)(struct fs_node*,uint32_t,uint32_t,uint8_t*);
-typedef void (*open_type_t)(struct fs_node*);
-typedef void (*close_type_t)(struct fs_node*);
-typedef struct dirent * (*readdir_type_t)(struct fs_node*,uint32_t);
-typedef struct fs_node * (*finddir_type_t)(struct fs_node*,char *name);
-
-typedef uint32_t fs_prop;
-typedef struct fs_node {
-    char name[128];
-    fs_prop mask;
-    fs_prop flags;
-    fs_prop length;
-    fs_prop impl;
-    read_type_t read;
-    write_type_t write;
-    open_type_t open;
-    close_type_t close;
-    readdir_type_t readdir;
-    finddir_type_t finddir;
-    struct fs_node *ptr;
-} fs_node_t;
-
-#pragma endregion
+#include "wasMint.h"
 
 WASMINT_IMPORT void _wasMint_js_print(wasMint_string ptr, int len);
 

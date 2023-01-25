@@ -13,7 +13,7 @@ function hashObj(obj) {
         .reduce((acc, v) => acc += v).toString(16)
 }
 
-let woman = {
+let cfg = {
     "_wasMint_8xf32x4_add": {
         params: ["Number", "Number", "Number", "Number", "Number", "Number", "Number", "Number"],
         return: {
@@ -65,4 +65,4 @@ let woman = {
 };
 
 
-console.log(hashObj(woman))
+console.log(hashObj(cfg))

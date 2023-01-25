@@ -5,6 +5,17 @@ class wasMintVoid {
 }
 
 class wasMintModule {
+  #__functions__ = {};
+  #functionConfig = {};
+
+  #internalModuleInstance = {};
+  #exports = {};
+
+  #malloc = () => {};
+  #free = () => {};
+
+  #debugPrint = () => {};
+  
   constructor(
     wasmPath,
     importConfig = {
@@ -45,17 +56,18 @@ class wasMintModule {
       BigUint64Array: BigUint64Array,
     };
 
-    this.functionConfig = functionConfig;
+    this.#functionConfig = functionConfig;
 
     //Assign debugPrint to be callable from WASM / C
-    this.debugPrint = debugPrint;
+    this.#debugPrint = debugPrint;
 
     //Preinitialize those two...
-    this.internalModuleInstance = {};
-    this.exports = {};
+    this.#internalModuleInstance = {};
+    this.#exports = {};
 
     this.properties = {};
-    this.functions = {};
+
+    this.functions = {}
 
     //Load and instantiate the WASM module
     this.wasMintDispatchEvent(
@@ -66,13 +78,19 @@ class wasMintModule {
     (async () => {
       await WebAssembly.instantiateStreaming(fetch(wasmPath), importConfig)
         .then((obj) => {
-          this.internalModuleInstance = obj.instance;
-          this.exports = obj.instance.exports;
+          this.wasMintDispatchEvent(
+            "wasMintWASMLoaded",
+            "INFO",
+            "WASM module loaded."
+          );
+
+          this.#internalModuleInstance = obj.instance;
+          this.#exports = obj.instance.exports;
 
           let tmpFunctions = {};
 
           //Determine what's a function and what's not and add to the according dictionary
-          Object.entries(this.internalModuleInstance.exports).forEach(
+          Object.entries(this.#internalModuleInstance.exports).forEach(
             (element) =>
               typeof element[1] === "function"
                 ? (tmpFunctions[element[0]] = element[1])
@@ -86,17 +104,17 @@ class wasMintModule {
             this.wasMintHasSignature("memory")
           ) {
             //Shim malloc and free calls to display debug output
-            this.free = (ptr) => {
+            this.#free = (ptr) => {
               console.info(`[wasMint] free(ptr: ${ptr});`);
               if (ptr === 0)
                 throw new Error(
                   "[wasMint] Memory deallocation error, attempted to call free(ptr); with ptr = 0!"
                 );
-              this.exports.free(ptr);
+              this.#exports.free(ptr);
             };
 
-            this.malloc = (size) => {
-              let ptr = this.exports.malloc(size);
+            this.#malloc = (size) => {
+              let ptr = this.#exports.malloc(size);
               if (size === 0)
                 throw new Error(
                   "[wasMint] Memory allocation error, attempted to call malloc(size); with size = 0!"
@@ -105,7 +123,7 @@ class wasMintModule {
               return ptr;
             };
 
-            this.memory = this.exports.memory;
+            this.memory = this.#exports.memory;
 
             this.wasMintDispatchEvent(
               "wasMintInfo",
@@ -122,18 +140,21 @@ class wasMintModule {
 
           //If the module exports a "main" method assign it, if not assign undefined
           this.potentialEntryPoint = undefined;
-          this.wasMintHasSignature("main")
-            ? (this.potentialEntryPoint = this.exports.main)
-            : undefined;
-          this.init = () => {
-            this.potentialEntryPoint.call();
-          };
 
-          this.wasMintDispatchEvent(
-            "wasMintWASMLoaded",
-            "INFO",
-            "WASM module loaded."
-          );
+          if (this.wasMintHasSignature("main")) {
+            this.potentialEntryPoint = this.#exports.main;
+            this.stateInitialised = false;
+            this.init = () => {
+              this.wasMintDispatchEvent(
+                "wasMintInfo",
+                "INFO",
+                "WASM Module initialised."
+              );
+              this.potentialEntryPoint();
+              this.stateInitialised = true;
+            };
+          }
+
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
@@ -149,9 +170,9 @@ class wasMintModule {
             } configurable functions...`
           );
           for (let funKey in tmpFunctions) {
-            if (Object.keys(this.functionConfig).includes(funKey)) {
-              this.functions[funKey] = this.functionConfig[funKey];
-              this.functions[funKey]._function = tmpFunctions[funKey];
+            if (Object.keys(this.#functionConfig).includes(funKey)) {
+              this.#__functions__[funKey] = this.#functionConfig[funKey];
+              this.#__functions__[funKey]._function = tmpFunctions[funKey];
               this.wasMintDispatchEvent(
                 "wasMintInfo",
                 "INFO",
@@ -163,7 +184,7 @@ class wasMintModule {
             "wasMintInfo",
             "INFO",
             `Finished generation of ${
-              Object.keys(this.functions).length
+              Object.keys(this.#__functions__).length
             } sets of metadata!`
           );
 
@@ -171,22 +192,22 @@ class wasMintModule {
             "wasMintInfo",
             "INFO",
             `Attempting to generate call wrappers for ${
-              Object.keys(this.functions).length
+              Object.keys(this.#__functions__).length
             } exported functions...`
           );
-          for (let funKey in this.functions) {
+          for (let funKey in this.#__functions__) {
             this.wasMintDispatchEvent(
               "wasMintInfo",
               "INFO",
               `Generated call wrapper for $${funKey}!`
             );
-            this.functions[funKey].call = (...primaryArgs) => {
-              this.functions[funKey].callback ??= (args) => console.log(args);
-              this.functions[funKey].callback(`$${funKey}(${primaryArgs})`);
+            this.#__functions__[funKey].call = (...primaryArgs) => {
+              this.#__functions__[funKey].callback ??= (args) => console.log(args);
+              this.#__functions__[funKey].callback(`$${funKey}(${primaryArgs})`);
               if (
                 primaryArgs.length < 0 ||
-                primaryArgs.length > this.functions[funKey].params.length ||
-                primaryArgs.length < this.functions[funKey].params.length
+                primaryArgs.length > this.#__functions__[funKey].params.length ||
+                primaryArgs.length < this.#__functions__[funKey].params.length
               ) {
                 throw new Error(
                   `Invalid parameter count of [${primaryArgs.length}] for [${funKey}]`
@@ -196,15 +217,15 @@ class wasMintModule {
               let _typeof = (val) => {
                 return Object.prototype.toString.call(val).slice(8, -1);
               };
-              for (let i = 0; i < this.functions[funKey].params.length; i++) {
+              for (let i = 0; i < this.#__functions__[funKey].params.length; i++) {
                 if (
-                  _typeof(primaryArgs[i]) !== this.functions[funKey].params[i]
+                  _typeof(primaryArgs[i]) !== this.#__functions__[funKey].params[i]
                 ) {
                   throw new Error(
                     `Invalid parameter type of [${_typeof(
                       primaryArgs[i]
                     )}] instead of [${
-                      this.functions[funKey].params[i]
+                      this.#__functions__[funKey].params[i]
                     }] at [${i}] for [${funKey}]`
                   );
                 }
@@ -231,12 +252,12 @@ class wasMintModule {
                 return tmpArgs;
               };
               let finalArgs = castArgs(primaryArgs);
-              let primaryResult = this.functions[funKey]._function(
+              let primaryResult = this.#__functions__[funKey]._function(
                 ...finalArgs
               );
 
               let castResult = (ptr, len) => {
-                switch (this.functions[funKey].return.type) {
+                switch (this.#__functions__[funKey].return.type) {
                   case "Number":
                     return new Number(ptr);
                     break;
@@ -310,7 +331,7 @@ class wasMintModule {
               };
 
               //Let castResult decide what should be returned
-              let returnLength = this.functions[funKey].return.length;
+              let returnLength = this.#__functions__[funKey].return.length;
 
               if (_typeof(returnLength) !== "Number") {
                 //Assume calculative formula
@@ -359,17 +380,17 @@ class wasMintModule {
               let finalResult = castResult(primaryResult, returnLength);
 
               //Handle void function without a return value
-              if (this.functions[funKey].return.type === "Void") {
+              if (this.#__functions__[funKey].return.type === "Void") {
                 return;
               } else if (
-                _typeof(finalResult) !== this.functions[funKey].return.type
+                _typeof(finalResult) !== this.#__functions__[funKey].return.type
               ) {
                 //Return type check via more accurate typeof
                 throw new Error(
                   `Invalid return type configuration of [${_typeof(
                     finalResult
                   )}] instead of [${
-                    this.functions[funKey].return.type
+                    this.#__functions__[funKey].return.type
                   }] for [${funKey}]`
                 );
               } else {
@@ -381,7 +402,7 @@ class wasMintModule {
             "wasMintInfo",
             "INFO",
             `Finished generation of call wrappers for ${
-              Object.keys(this.functions).length
+              Object.keys(this.#__functions__).length
             } exported functions!`
           );
         })
@@ -392,7 +413,17 @@ class wasMintModule {
             `Error occured during WASM loading: ${err} !`
           );
         });
-      console.table("Configured function listing", this.functions);
+
+        for(let funcIdentifier of Object.keys(this.#__functions__)) {
+          this.functions[funcIdentifier] = (this.#__functions__[funcIdentifier].call)
+        }
+
+      console.table("Configured function listing", this.#__functions__);
+      this.wasMintDispatchEvent(
+        "wasMintWASMConfigured",
+        "INFO",
+        "WASM Module configured."
+      );
     })();
   }
 
@@ -411,7 +442,7 @@ class wasMintModule {
   }
 
   wasMintHasSignature(sig) {
-    return Object.keys(this.exports).includes(sig);
+    return Object.keys(this.#exports).includes(sig);
   }
 
   wasMintPtrToString(ptr, len) {
@@ -421,7 +452,7 @@ class wasMintModule {
       let string = dec.decode(array);
       return string;
     } finally {
-      this.free(ptr);
+      this.#free(ptr);
     }
   }
 
@@ -429,7 +460,7 @@ class wasMintModule {
     let enc = new TextEncoder();
     let bytes = enc.encode(string);
 
-    let ptr = this.malloc(bytes.byteLength);
+    let ptr = this.#malloc(bytes.byteLength);
 
     let buffer = new Uint8Array(this.memory.buffer, ptr, bytes.byteLength + 1);
     buffer.set(bytes);
@@ -437,7 +468,7 @@ class wasMintModule {
   }
 
   wasMintArrayToPtr(array, type) {
-    let ptr = this.malloc(array.byteLength);
+    let ptr = this.#malloc(array.byteLength);
 
     let buffer = new this.typedArrCtors[type](
       this.memory.buffer,
@@ -450,7 +481,7 @@ class wasMintModule {
   }
 }
 class wasMintModuleManager {
-  * #genID() {
+  *#genID() {
     let id = 0;
 
     while (true) {
@@ -471,7 +502,7 @@ class wasMintModuleManager {
 
   addModule(wasMintModule, name) {
     let aF = false;
-    if(name === undefined || name === "") return false;
+    if (name === undefined || name === "") return false;
     for (const n of this.__modules__.values()) {
       if (this.allowDuplicates === true) {
         break;
@@ -482,7 +513,10 @@ class wasMintModuleManager {
 
     if (!aF) {
       if (this.modulePoolSize++ != this.maxModulePoolSize) {
-        this.__modules__[this.#nextID()] = { name: name, module: wasMintModule };
+        this.__modules__[this.#nextID()] = {
+          name: name,
+          module: wasMintModule,
+        };
       } else {
         this.modulePoolSize--;
         console.warn(
@@ -500,16 +534,16 @@ class wasMintModuleManager {
   }
 
   removeModule(name) {
-    if(this.__modules__.some(mod => mod.name === name)) {
-        this.__modules__ = this.__modules__.filter((mod) => mod.name !== name);
-        return true;
+    if (this.__modules__.some((mod) => mod.name === name)) {
+      this.__modules__ = this.__modules__.filter((mod) => mod.name !== name);
+      return true;
     }
     return false;
   }
 
   initAll() {
     this.__modules__.forEach((mod) => {
-      if(Object.keys(mod).includes("init")) mod.init();
-    })
+      if (Object.keys(mod).includes("init")) mod.init();
+    });
   }
 }
