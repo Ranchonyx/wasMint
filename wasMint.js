@@ -11,7 +11,9 @@ class wasMintModule {
   #internalModuleInstance = {};
   #exports = {};
 
-  #debugPrint = () => {}
+  #growMemoryOnAllocWarning = false;
+
+  #debugPrint = () => {};
 
   #importConfig = {
     wasi_snapshot_preview1: {
@@ -34,6 +36,7 @@ class wasMintModule {
     wasmPath,
     functionConfig,
     globaliseFunctions = false,
+    growMemoryOnAllocWarning = false,
     memory = new WebAssembly.Memory({
       initial: 16,
       maximum: 32,
@@ -62,10 +65,12 @@ class wasMintModule {
       BigUint64Array: BigUint64Array,
     };
 
+    this.#growMemoryOnAllocWarning = growMemoryOnAllocWarning;
+
     this.#importConfig.env.memory = memory;
 
     this.#functionConfig = functionConfig;
-    
+
     //Assign debugPrint to be callable from WASM / C
     this.#debugPrint = debugPrint;
 
@@ -114,23 +119,30 @@ class wasMintModule {
           ) {
             //Shim malloc and free calls to display debug output
             this.#free = (ptr) => {
-              console.info(`[wasMint] free(ptr: ${ptr});`);
               if (ptr === 0)
                 throw new Error(
                   "[wasMint] Memory deallocation error, attempted to call free(ptr); with ptr = 0!"
                 );
               this.#exports.free(ptr);
+              console.info(`[wasMint] free(ptr: ${ptr});`);
             };
 
-            this.#malloc = (size) => {
+            this.malloc = (size) => {
               if (size <= 0) {
                 throw new Error(
                   "[wasMint] Memory allocation error, attempted to call malloc(size); with size = 0!"
                 );
-              } else if (size > this.memory.buffer.byteLength) {
-                throw new Error(
-                  "[wasMint] Memory allocation error, malloc(size); Not enough memory!"
-                );
+              }
+              if (size > this.memory.buffer.byteLength) {
+                if (this.#growMemoryOnAllocWarning) {
+                  console.warn(
+                    "[wasMint] Memory allocation warning, growing by 1 page (64k)!"
+                  );
+                } else {
+                  throw new Error(
+                    "[wasMint] Memory allocation error, malloc(size); Not enough memory!"
+                  );
+                }
               }
               let ptr = this.#exports.malloc(size);
               console.info(`[wasMint] malloc(size: ${size}) := ${ptr}`);
@@ -140,9 +152,11 @@ class wasMintModule {
             this.memory = this.#importConfig.env.memory;
             this.memory._grow = this.memory.grow;
             this.memory.grow = (pages) => {
-              console.info(`Memory growth requested, growing by ${pages} * 64k bytes`);
-              return this.memory._grow(pages)
-            }
+              console.info(
+                `Memory growth requested, growing by ${pages} * 64k bytes`
+              );
+              return this.memory._grow(pages);
+            };
 
             this.wasMintDispatchEvent(
               "wasMintInfo",
@@ -509,7 +523,7 @@ class wasMintModule {
     let enc = new TextEncoder();
     let bytes = enc.encode(string);
 
-    let ptr = this.#malloc(bytes.byteLength);
+    let ptr = this.malloc(bytes.byteLength);
 
     let buffer = new Uint8Array(this.memory.buffer, ptr, bytes.byteLength + 1);
     buffer.set(bytes);
@@ -517,7 +531,7 @@ class wasMintModule {
   }
 
   wasMintArrayToPtr(array, type) {
-    let ptr = this.#malloc(array.byteLength);
+    let ptr = this.malloc(array.byteLength);
 
     let buffer = new this.typedArrCtors[type](
       this.memory.buffer,
