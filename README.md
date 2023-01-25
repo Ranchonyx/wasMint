@@ -61,4 +61,4 @@ constructor wasMintModule(wasmPath, functionConfig, globaliseFunctions, growMemo
 
 > `debugPrint(ptr, len)` is oftentimes called as an indicator when a configured wasMint function is called. This behaviour can be toggled by setting the `showCallback` property's value in the `functionConfig` to `false` for the respective function.
 
-After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `function` property, or, if you have `globaliseFunctions` enable, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
+After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `function` property, or, if you have `globaliseFunctions` enabled, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
