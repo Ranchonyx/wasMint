@@ -1,104 +1,94 @@
 {
-    "_wasMint_8xf32x4_add": {
-      "params": [
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number"
-      ],
-      "return": {
-        "type": "Float32Array",
-        "length": 4
-      }
-    },
-    "_wasMint_8xf32x4_sub": {
-      "params": [
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number"
-      ],
-      "return": {
-        "type": "Float32Array",
-        "length": 4
-      }
-    },
-    "_wasMint_8xf32x4_mul": {
-      "params": [
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number"
-      ],
-      "return": {
-        "type": "Float32Array",
-        "length": 4
-      }
-    },
-    "_wasMint_8xf32x4_div": {
-      "params": [
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number"
-      ],
-      "return": {
-        "type": "Float32Array",
-        "length": 4
-      }
-    },
-    "_wasMint_print": {
-      "params": [
-        "String"
-      ],
-      "return": {
-        "type": "Void",
-        "length": 0
-      }
-    },
-    "_wasMint_arrayIOTest": {
-      "params": [
-        "Float32Array",
-        "Number"
-      ],
-      "return": {
-        "type": "Float32Array",
-        "length": "A1"
-      }
-    },
-    "_wasMint_fib": {
-      "params": [
-        "Number"
-      ],
-      "return": {
-        "type": "BigInt",
-        "length": 1
-      }
-    },
-    "_wasMint_arrayXOR": {
-        "params": [
-            "Uint32Array", "Number",
-            "Uint32Array", "Number"
-        ],
-        "return": {
-            "type": "Uint32Array",
-            "length": "J A1 < A3 ? A1 : A3"
-        }
+  "_wasMint_8xf32x4_add": {
+    "params": [
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number"
+    ],
+    "return": {
+      "type": "Float32Array",
+      "length": 4
+    }
+  },
+  "_wasMint_8xf32x4_sub": {
+    "params": [
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number"
+    ],
+    "return": {
+      "type": "Float32Array",
+      "length": 4
+    }
+  },
+  "_wasMint_8xf32x4_mul": {
+    "params": [
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number"
+    ],
+    "return": {
+      "type": "Float32Array",
+      "length": 4
+    }
+  },
+  "_wasMint_8xf32x4_div": {
+    "params": [
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number",
+      "Number"
+    ],
+    "return": {
+      "type": "Float32Array",
+      "length": 4
+    }
+  },
+  "_wasMint_print": {
+    "params": ["String"],
+    "return": {
+      "type": "Void",
+      "length": 0
+    }
+  },
+  "_wasMint_arrayIOTest": {
+    "params": ["Float32Array", "Number"],
+    "return": {
+      "type": "Float32Array",
+      "length": "A1"
+    }
+  },
+  "_wasMint_fib": {
+    "params": ["Number"],
+    "return": {
+      "type": "BigInt",
+      "length": 1
+    }
+  },
+  "_wasMint_arrayXOR": {
+    "params": ["Uint32Array", "Number", "Uint32Array", "Number"],
+    "return": {
+      "type": "Uint32Array",
+      "length": "J A1 < A3 ? A1 : A3"
     }
   }
+}
