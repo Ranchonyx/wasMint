@@ -33,6 +33,11 @@ Each one of the, via emscripten's SDK, exported functions is assigned a "functio
       "type": "Float32Array",
       "length": 4
     },
-    "showCallback": false
+    ...
   }
 ```
+
+This example defines a native C/WASM/etc function's structure
+The function's identifier/name in this case is `_wasMint_8xf32x4_add`
+Its parameters are eight `Number` types.
+It returns an array of 32-bit floating point numbers with 4 elements.
