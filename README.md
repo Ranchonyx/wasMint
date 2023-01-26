@@ -48,7 +48,7 @@ As a matter of fact, this format is somewhat inspired by Emscripten's `ccall` sy
 
 When exporting the `main` function from the WASM source code, wasMint will automatically assign this function to be the respective module's init function, it can be compared to the _Arduino IDE's_ `void setup()` function and is only able to be ran once.
 
-## Usage
+### Usage
 
 The syntax for constructing a new wasMint Module is as follows:
  ```javascript
@@ -63,7 +63,7 @@ constructor wasMintModule(wasmPath, functionConfig, globaliseFunctions, growMemo
 
 After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `functions` property, or, if you have `globaliseFunctions` enabled, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
 
-## Somewhat reliable typechecking
+### Somewhat reliable typechecking
 - > `__protoClassOf(obj)` fairly reliably returns the class name of any class instance, or the classic `typeof` if it is given a standard object.
 ```javascript
 const __protoClassOf = (obj) => {
@@ -71,35 +71,35 @@ const __protoClassOf = (obj) => {
 };
 ```
 
-## Events
+### Events
 wasMint emits the following events, further details about the event can be found in the event's detail parameters:
 - > `wasMintError` Emitted when wasMint encounters an error.
 - > `wasMintInfo` Emitted for purely informational and debug output.
 - > `wasMintWASMLoaded` Emitted when the WASM file has been loaded.
 - > `wasMintWASMConfigured` Emitted when wasMint successfully configured a Module.
 
-## Errors
+### Errors
 wasMint throws the following errors:
-### Malloc & Free
+#### Malloc & Free
 - > `free(ptr) := Cannot free *0!` when an attempt to call `free(ptr)` with ptr := 0 is detected.
 - > `malloc(size) := Cannot allocate 0 bytes!` when an attempt to call `malloc(size)` with size := 0 is detected.
 - > `malloc(size) := Not enough memory!` when an attempt to call `malloc(size)` with a size greater than the maximum available memory is detected.
-### Function calls
+#### Function calls
 - > `Invalid parameter count of <count> for <function>` when an attempt to call a wasMint configured function with either too little or too many parameters is detected.
 - > `Invalid parameter type of <supplied_type> instead of <expected_type> at <paramater_index> for <function>` when an attempt to supply the parameters for a wasMint configured function with a wrong data type.
 - > `Invalid return type configuration of <supplied_type> instead of <expected_type> for <function>` when a wasMint configured functions returns a type that it was not configured for.
 
-## C Counterpart
+### C Counterpart
 wasMint comes with a C header file, `wasMint.h` which contains basic necessary function definitions, implementations, defines, typedefs etc for wasMint to run without nuking itself.
 
-## Building
-### Windows
+### Building
+#### Windows
 > Execute `activate_emcc.bat` which executes emsdk's `emsdk_env.bat` which should be in `..\emsdk`
 > Execute `build.ps1`
 
-### Linux systems
+#### Linux systems
 > Time to wait since I have not yet done anything to make this shebang run on linux systems, however it should be very easy for you to port the build scripts and optain a linux version of emsdk.
 
-## "You're my heart, you're my soul, brother func-tion-config-uration"
-### The function configuration in-depth
+### "You're my heart, you're my soul, brother func-tion-config-uration"
+#### The function configuration in-depth
 
