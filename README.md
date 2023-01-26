@@ -66,18 +66,13 @@ constructor wasMintModule(wasmPath, functionConfig, globaliseFunctions, growMemo
 
 After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `functions` property, or, if you have `globaliseFunctions` enabled, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
 
-### Somewhat reliable typechecking
+### Typechecking and hashing
 
 - > `__protoClassOf(obj)` fairly reliably returns the class name of any class instance, or the classic `typeof` if it is given a standard object.
 
-```javascript
-const __protoClassOf = (obj) => {
-  return Object.getPrototypeOf(obj).constructor.name;
-};
-```
+- > `__hashOf(obj)` returns a decently reliable hash of its paramater, regardless of type.
 
 ### Events
-
 wasMint emits the following events, further details about the event can be found in the event's detail parameters:
 
 - > `wasMintError` Emitted when wasMint encounters an error.
@@ -86,7 +81,6 @@ wasMint emits the following events, further details about the event can be found
 - > `wasMintWASMConfigured` Emitted when wasMint successfully configured a Module.
 
 ### Errors
-
 wasMint throws the following errors:
 
 #### Malloc & Free
@@ -106,18 +100,14 @@ wasMint throws the following errors:
 wasMint comes with a C header file, `wasMint.h` which contains basic necessary function definitions, implementations, defines, typedefs etc for wasMint to run without nuking itself.
 
 ### Building
-
 #### Windows
-
 > Execute `activate_emcc.bat` which executes emsdk's `emsdk_env.bat` which should be in `..\emsdk`
 > Execute `build.ps1`
 
 #### Linux systems
-
 > Time to wait since I have not yet done anything to make this shebang run on linux systems, however it should be very easy for you to port the build scripts and optain a linux version of emsdk.
 
 ### "You're my heart, you're my soul, brother func-tion-config-uration"
-
 #### The function configuration in-depth
 
 ##### Valid configuration datatypes listing:
