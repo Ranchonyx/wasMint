@@ -2,6 +2,26 @@ const __protoClassOf = (obj) => {
   return Object.getPrototypeOf(obj).constructor.name;
 };
 
+const __hashOf = (obj) => {
+  if (!(typeof obj === "object")) {
+    return obj
+      .toString()
+      .split("")
+      .map((e) => e.charCodeAt(0))
+      .reduce((acc, v, i, arr) => (acc += (v % arr[i - 1]) * (i * (acc ^ v))))
+      .toString(16);
+  }
+
+  return Object.entries(obj)
+    .flat(Infinity)
+    .map((e) => e.toString())
+    .join("")
+    .split("")
+    .map((e) => e.charCodeAt(0))
+    .reduce((acc, v, i, arr) => (acc += (v % arr[i - 1]) * (i * (acc ^ v))))
+    .toString(16);
+};
+
 class wasMintModule {
   #__functions__ = {};
   #functionConfig = {};
@@ -118,9 +138,7 @@ class wasMintModule {
             //Shim malloc and free calls to display debug output
             this.#free = (ptr) => {
               if (ptr === 0)
-                throw new Error(
-                  "[wasMint] free(ptr) := Cannot free *0!"
-                );
+                throw new Error("[wasMint] free(ptr) := Cannot free *0!");
               this.#exports.free(ptr);
               console.info(`[wasMint] free(ptr: ${ptr});`);
             };
@@ -490,6 +508,7 @@ class wasMintModule {
         "INFO",
         "WASM Module configured."
       );
+      this.hash = __hashOf(this);
     })();
   }
 
