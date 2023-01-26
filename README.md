@@ -154,8 +154,8 @@ wasMint comes with a C header file, `wasMint.h` which contains basic necessary f
   }
 ```
 
-This function accepts 1 String as its argument and returns Void.
-No callback function is going to be executed when this function is called.
+> This function accepts 1 String as its argument and returns Void.
+> No callback function is going to be executed when this function is called.
 
 ##### Figure 2
 
