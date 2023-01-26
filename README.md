@@ -70,7 +70,7 @@ After the constructor is done ... constructing, you will be able to find your wa
 
 - > `__protoClassOf(obj)` fairly reliably returns the class name of any class instance, or the classic `typeof` if it is given a standard object.
 
-- > `__hashOf(obj)` returns a decently reliable hash of its paramater, regardless of type.
+- > `__hashOf(obj)` returns a reliable hash of its parameter, regardless of type. I tested it on 1.000.000 uniquely generated 16 character long hexadecimal strings and it produced _zero_ collisions.
 
 ### Events
 wasMint emits the following events, further details about the event can be found in the event's detail parameters:
