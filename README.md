@@ -34,7 +34,7 @@ Each one of the, via emscripten's SDK, exported functions is assigned a "functio
       "type": "Float32Array",
       "length": 4
     },
-    ...
+    "showCallback": false
   }
 ```
 
@@ -62,6 +62,14 @@ constructor wasMintModule(wasmPath, functionConfig, globaliseFunctions, growMemo
 - > `debugPrint(ptr, len)` is oftentimes called as an indicator when a configured wasMint function is called. This behaviour can be toggled by setting the `showCallback` property's value in the `functionConfig` to `false` for the respective function.
 
 After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `functions` property, or, if you have `globaliseFunctions` enabled, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
+
+## Somewhat reliable typechecking
+- > `__protoClassOf(obj)` fairly reliably returns the class name of any class instance, or the classic `typeof` if it is given a standard object.
+```javascript
+const __protoClassOf = (obj) => {
+  return Object.getPrototypeOf(obj).constructor.name;
+};
+```
 
 ## Events
 wasMint emits the following events, further details about the event can be found in the event's detail parameters:
