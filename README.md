@@ -103,3 +103,34 @@ wasMint comes with a C header file, `wasMint.h` which contains basic necessary f
 ### "You're my heart, you're my soul, brother func-tion-config-uration"
 #### The function configuration in-depth
 
+##### Valid configuration datatypes listing:
+|   Data Type         |   Return Behaviour
+|---------------------|---------------------|
+|`String`| ptr/val -> JSString
+|`Number`| ptr/val -> JSNumber
+|`BigInt`| ptr/val -> JSBigInt
+|`Int8Array`| ptr/val -> JSInt8Array
+|`Uint8Array`| ptr/val -> JSUint8Array
+|`Int16Array`| ptr/val -> JSInt16Array
+|`Uint16Array`| ptr/val -> JSUint16Array
+|`Uint8ClampedArray`| ptr/val -> JSUint8ClampedArray
+|`Int32Array`| ptr/val -> JSInt32Array
+|`Uint32Array`| ptr/val -> JSUint32Array
+|`Float32Array`| ptr/val -> JSFloat32Array
+|`Float64Array`| ptr/val -> JSFloat64Array
+|`BigInt64Array`| ptr/val -> JSBigInt64Array
+|`BigUint64Array`| ptr/val -> JSBigUint64Array
+|`Undefined`| ptr/val -> return JSUndefined (Normal return behaviour)
+|`Void`| ptr/val -> return; (Returns nothing and does not even try to interpret a would-be return value)
+
+##### Example 1
+```json
+"_wasMint_print": {
+    "params": ["String"],
+    "return": {
+      "type": "Void",
+      "length": 0
+    },
+    "showCallback": false
+  }
+```
