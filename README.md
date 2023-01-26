@@ -121,7 +121,7 @@ wasMint comes with a C header file, `wasMint.h` which contains basic necessary f
 |`BigInt64Array`| ptr/val -> JSBigInt64Array
 |`BigUint64Array`| ptr/val -> JSBigUint64Array
 |`Undefined`| ptr/val -> return JSUndefined (Normal return behaviour)
-|`Void`| ptr/val -> return; (Returns nothing and does not even try to interpret a would-be return value)
+|`Void`| ptr/val -> return; (Returns nothing and must be paired with `"length":0`)
 
 ##### Example 1
 ```json
@@ -134,3 +134,42 @@ wasMint comes with a C header file, `wasMint.h` which contains basic necessary f
     "showCallback": false
   }
 ```
+This function accepts 1 String as its argument and returns Void.
+No callback function is going to be executed when this function is called.
+
+##### Example 2
+```json
+  "_wasMint_arrayIOTest": {
+    "params": ["Float32Array", "Number"],
+    "return": {
+      "type": "Float32Array",
+      "length": "A1"
+    },
+    "showCallback": false
+  }
+```
+
+>This function takes 1 array of 32-bit floating point numbers (Plainly "Number"s in JS) and 1 additional Number argument.
+>All is looking normal so far until we have a look at the "return" object.
+>Obviously we cannot always know the length of a returned Array for sure, and as such wasMint implements _argument configurable return lengths_.
+>In this case `"length": "A1"` stands for _The length of the returned value shall be the same as Argument1 (A1)_, so in this case the additional Number argument.
+
+```json
+  "_wasMint_arrayXOR": {
+    "params": ["Uint32Array", "Number", "Uint32Array", "Number"],
+    "return": {
+      "type": "Uint32Array",
+      "length": "J A1 < A3 ? A1 : A3"
+    },
+    "showCallback": false
+  }
+```
+
+>Let's skip over the params and have a direct look at the "return" object again.
+>This time we can see a _J_ followed by the previously mentioned _Argument Identifiers_ forming a _ternary expression_.
+>Let's go over it:
+>`J` denotes that the return lenght of this function shall be determined by evaluating a _very limited JavsScript expression_.
+>`AI < A3 ? A1 : A3` denotes that if _Argument 1_ is less than _Argument 3_, _Argument 1_ shall be the return length, otherwise it shall be _Argument 3_.
+
+As a matter of fact, wasMint implements similar behaviour when the `J` is replaced by a `M`, which then denotes that the return length of this function shall be determined by a mathematical expression.
+
