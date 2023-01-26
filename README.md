@@ -99,3 +99,7 @@ wasMint comes with a C header file, `wasMint.h` which contains basic necessary f
 
 ### Linux systems
 > Time to wait since I have not yet done anything to make this shebang run on linux systems, however it should be very easy for you to port the build scripts and optain a linux version of emsdk.
+
+## "You're my heart, you're my soul, brother func-tion-config-uration"
+### The function configuration in-depth
+
