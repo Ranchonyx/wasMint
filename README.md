@@ -55,12 +55,11 @@ The syntax for constructing a new wasMint Module is as follows:
 constructor wasMintModule(wasmPath, functionConfig, globaliseFunctions, growMemoryOnAllocWarning, memory?, debugPrint?);
 ```
 - > `wasmPath` denotes the URI/URL/Whatever of the WASM file to load, wasMint uses `fetch()` to load the WASM file.
-> `functionConfig` denotes the aforementioned function config as a JSON object.
-> `globaliseFunctions` denotes if configured wasMint functions should be available on the `globalThis` Object or exclusively as properties of the containing wasMint module.
-> `growMemoryOnAllocWarning` denotes if wasMint should attempt to grow available memory when an internal `malloc(size_t)` call would fail due to not having enough available memory.
-> `memory` allows you to supply your own `Webassembly.Memory` object, if not supplied wasMint will use a memory with 16 initial pages and 32 maximum pages.
-
-> `debugPrint(ptr, len)` is oftentimes called as an indicator when a configured wasMint function is called. This behaviour can be toggled by setting the `showCallback` property's value in the `functionConfig` to `false` for the respective function.
+- > `functionConfig` denotes the aforementioned function config as a JSON object.
+- > `globaliseFunctions` denotes if configured wasMint functions should be available on the `globalThis` Object or exclusively as properties of the containing wasMint module.
+- > `growMemoryOnAllocWarning` denotes if wasMint should attempt to grow available memory when an internal `malloc(size_t)` call would fail due to not having enough available memory.
+- > `memory` allows you to supply your own `Webassembly.Memory` object, if not supplied wasMint will use a memory with 16 initial pages and 32 maximum pages.
+- > `debugPrint(ptr, len)` is oftentimes called as an indicator when a configured wasMint function is called. This behaviour can be toggled by setting the `showCallback` property's value in the `functionConfig` to `false` for the respective function.
 
 After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `function` property, or, if you have `globaliseFunctions` enabled, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
 
