@@ -1,15 +1,5 @@
-class wasMintVoid {
-  constructor() {
-    //Fill the void in my soul due to lack of affection by maidens
-  }
-}
-
-const __classof = (obj) => {
+const __protoClassOf = (obj) => {
   return Object.getPrototypeOf(obj).constructor.name;
-};
-
-const __strtypeof = (val) => {
-  return Object.prototype.toString.call(val).slice(8, -1);
 };
 
 class wasMintModule {
@@ -129,7 +119,7 @@ class wasMintModule {
             this.#free = (ptr) => {
               if (ptr === 0)
                 throw new Error(
-                  "[wasMint] Memory deallocation error, attempted to call free(ptr); with ptr = 0!"
+                  "[wasMint] free(ptr) := Cannot free *0!"
                 );
               this.#exports.free(ptr);
               console.info(`[wasMint] free(ptr: ${ptr});`);
@@ -138,7 +128,7 @@ class wasMintModule {
             this.#malloc = (size) => {
               if (size <= 0) {
                 throw new Error(
-                  "[wasMint] Memory allocation error, attempted to call malloc(size); with size = 0!"
+                  "[wasMint] malloc(size) := Cannot allocate 0 bytes!"
                 );
               }
               if (size > this.memory.buffer.byteLength) {
@@ -148,7 +138,7 @@ class wasMintModule {
                   );
                 } else {
                   throw new Error(
-                    "[wasMint] Memory allocation error, malloc(size); Not enough memory!"
+                    "[wasMint] malloc(size) := Not enough memory!"
                   );
                 }
               }
@@ -279,11 +269,11 @@ class wasMintModule {
                 i++
               ) {
                 if (
-                  __strtypeof(primaryArgs[i]) !==
+                  __protoClassOf(primaryArgs[i]) !==
                   this.#__functions__[funKey].params[i]
                 ) {
                   throw new Error(
-                    `Invalid parameter type of [${__strtypeof(
+                    `Invalid parameter type of [${__protoClassOf(
                       primaryArgs[i]
                     )}] instead of [${
                       this.#__functions__[funKey].params[i]
@@ -295,7 +285,7 @@ class wasMintModule {
               let castArgs = (args) => {
                 let tmpArgs = [];
                 for (let arg of args) {
-                  switch (__strtypeof(arg)) {
+                  switch (__protoClassOf(arg)) {
                     case "Number":
                       tmpArgs.push(new Number(arg));
                       break;
@@ -307,7 +297,7 @@ class wasMintModule {
                       break;
                     default:
                       tmpArgs.push(
-                        this.wasMintArrayToPtr(arg, __strtypeof(arg))
+                        this.wasMintArrayToPtr(arg, __protoClassOf(arg))
                       );
                       break;
                   }
@@ -396,7 +386,7 @@ class wasMintModule {
               //Let castResult decide what should be returned
               let returnLength = this.#__functions__[funKey].return.length;
 
-              if (__strtypeof(returnLength) !== "Number") {
+              if (__protoClassOf(returnLength) !== "Number") {
                 //Assume calculative formula
                 if (returnLength.length > 2 && returnLength.startsWith("M")) {
                   //Return length to be determined by mathematical expression
@@ -446,12 +436,12 @@ class wasMintModule {
               if (this.#__functions__[funKey].return.type === "Void") {
                 return;
               } else if (
-                __strtypeof(finalResult) !==
+                __protoClassOf(finalResult) !==
                 this.#__functions__[funKey].return.type
               ) {
                 //Return type check via more accurate typeof
                 throw new Error(
-                  `Invalid return type configuration of [${__strtypeof(
+                  `Invalid return type configuration of [${__protoClassOf(
                     finalResult
                   )}] instead of [${
                     this.#__functions__[funKey].return.type
@@ -577,7 +567,7 @@ class wasMintModuleManager {
   }
 
   addModule(wasMintModule, name) {
-    if (__classof(wasMintModule) !== "wasMintModule") {
+    if (__protoClassOf(wasMintModule) !== "wasMintModule") {
       return false;
     }
     let aF = false;

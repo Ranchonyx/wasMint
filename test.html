@@ -28,7 +28,7 @@
         let functionConfig = await fetch("functionConfig.json").then((cfg) =>
           cfg.json()
         );
-        Manager.addModule(new wasMintModule("wasMint.wasm", functionConfig, false, false), "Mod1");
+        Manager.addModule(new wasMintModule("module.wasm", functionConfig, false, false), "Mod1");
         
       };
     </script>

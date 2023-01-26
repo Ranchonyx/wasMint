@@ -10,7 +10,7 @@
       "Number",
       "Number"
     ],
-    "retur": {
+    "return": {
       "type": "Float32Array",
       "length": 4
     },
@@ -72,7 +72,8 @@
     "return": {
       "type": "Void",
       "length": 0
-    }
+    },
+    "showCallback": false
   },
   "_wasMint_arrayIOTest": {
     "params": ["Float32Array", "Number"],
