@@ -64,8 +64,19 @@ constructor wasMintModule(wasmPath, functionConfig, globaliseFunctions, growMemo
 After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `function` property, or, if you have `globaliseFunctions` enabled, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
 
 ## Events
-> wasMint emits the following events, further details about the event can be found in the event's detail parameters:
+wasMint emits the following events, further details about the event can be found in the event's detail parameters:
 - > `wasMintError` Emitted when wasMint encounters an error.
 - > `wasMintInfo` Emitted for purely informational and debug output.
 - > `wasMintWASMLoaded` Emitted when the WASM file has been loaded.
 - > `wasMintWASMConfigured` Emitted when wasMint successfully configured a Module.
+
+## C Counterpart
+wasMint comes with a C header file, `wasMint.h` which contains basic necessary function definitions, implementations, defines, typedefs etc for wasMint to run without nuking itself.
+
+## Building
+### Windows
+> Execute `activate_emcc.bat` which executes emsdk's `emsdk_env.bat` which should be in `..\emsdk`
+> Execute `build.ps1`
+
+### Linux systems
+> Time to wait since I have not yet done anything to make this shebang run on linux systems, however it should be very easy for you to port the build scripts and optain a linux version of emsdk.

@@ -1,1 +1,1 @@
-emcc -s WASM=1 -o wasMint.wasm .\wasMint.c -O0 -g3 "-Wl,--import-memory" "-Wl,--no-entry" "-Wl,--allow-undefined" -msimd128 -msse --std=c99 -s TOTAL_MEMORY=1MB -s ALLOW_MEMORY_GROWTH -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s STANDALONE_WASM -s EXPORTED_FUNCTIONS='["_main", "_malloc", "_free"]'
+emcc -s WASM=1 -o module.wasm .\module.c -O0 -g3 "-Wl,--import-memory" "-Wl,--no-entry" "-Wl,--allow-undefined" -msimd128 -msse --std=c99 -s TOTAL_MEMORY=1MB -s ALLOW_MEMORY_GROWTH -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s STANDALONE_WASM -s EXPORTED_FUNCTIONS='["_main", "_malloc", "_free"]'

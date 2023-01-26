@@ -1,39 +1,4 @@
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <xmmintrin.h>
-#include <wasm_simd128.h>
 #include "wasMint.h"
-
-WASMINT_IMPORT void _wasMint_js_print(wasMint_string ptr, int len);
-
-byte* _wasMint_fmt(wasMint_string fmt, ...) {
-    size_t base_len = (strlen(fmt) + 0xFF) + 1;
-    byte* buf = (byte*) malloc(base_len);
-    va_list args;
-    
-    va_start(args, fmt);
-    
-    vsnprintf(buf, base_len, fmt, args);
-    va_end(args);
-    
-    return buf;
-}
-
-WASMINT_EXPORT void _wasMint_print(wasMint_string str) {
-    size_t len = strlen(str);
-
-    if(len > 512) {
-            return;
-    } else {
-        byte* buf = (byte*) malloc(len + 1);
-        
-        strncpy(buf, str, len);
-        _wasMint_js_print(str, len);
-    }
-}
 
 //SIMD Stuff: <param_count>x<type>x<return_count>_<operation>
 WASMINT_EXPORT float* _wasMint_8xf32x4_add(float a, float b, float c, float d, float e, float f, float g, float h) {
@@ -103,7 +68,7 @@ WASMINT_EXPORT uint32_t* _wasMint_arrayXOR(uint32_t* a, size_t alen, uint32_t* b
 
 WASMINT_EXPORT int main() {
     wasMint_string startup_message = "wasMint Initialized!";
-    _wasMint_js_print(startup_message, strlen(startup_message));
+    _wasMint_print(startup_message);
 
     return 0;
 }

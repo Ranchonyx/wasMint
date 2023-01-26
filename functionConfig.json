@@ -10,7 +10,7 @@
       "Number",
       "Number"
     ],
-    "return": {
+    "retur": {
       "type": "Float32Array",
       "length": 4
     },
