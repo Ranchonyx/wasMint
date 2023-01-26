@@ -1,4 +1,5 @@
 # wasMint
+![wasMintLogo](https://github.com/ranchonyx/wasMint/raw/master/wasMintLogo.png)
 
 #### Requirements:
 
