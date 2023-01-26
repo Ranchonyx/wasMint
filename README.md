@@ -9,8 +9,9 @@
 
 ## Story
 
-> "I fucking hate emscripten's glue code!" I thought to myself one sunny day at work
-> That's it. I'm trying to make my own sort of ... WASM framework/runtime/thing
+> "I fucking hate emscripten's glue code!" I thought to myself one sunny day at work.
+
+> Yeah that's basically it. I'm trying to make my own sort of ... WASM framework/runtime/shebang
 
 ## Description
 
