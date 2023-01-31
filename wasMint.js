@@ -1,3 +1,5 @@
+'use strict'
+
 const __protoClassOf = (obj) => {
   return Object.getPrototypeOf(obj).constructor.name;
 };
@@ -43,7 +45,7 @@ class wasMintModule {
     env: {
       _wasMint_js_print: (ptr, len) => this.#debugPrint(ptr, len),
       emscripten_notify_memory_growth: (val) =>
-        console.info(`Memory growth! ${val}`),
+        console.info(`%c%s`, `color: skyblue;`, `Memory growth! ${val}`),
     },
   };
 
@@ -61,6 +63,8 @@ class wasMintModule {
     }),
     debugPrint = (ptr, len) => {
       console.log(
+        `%c%s`,
+        `color: green;`,
         `debugPrint(${len}b@${ptr}): ${this.wasMintPtrToString(ptr, len)}`
       );
     }
@@ -140,7 +144,7 @@ class wasMintModule {
               if (ptr === 0)
                 throw new Error("[wasMint] free(ptr) := Cannot free *0!");
               this.#exports.free(ptr);
-              console.info(`[wasMint] free(ptr: ${ptr});`);
+              console.info(`%c%s`, `color: skyblue;`, `[wasMint] free(ptr: ${ptr});`);
             };
 
             this.#malloc = (size) => {
@@ -152,6 +156,8 @@ class wasMintModule {
               if (size > this.memory.buffer.byteLength) {
                 if (this.#growMemoryOnAllocWarning) {
                   console.warn(
+                    "%c%s",
+                    "color: crimson;",
                     "[wasMint] Memory allocation warning, growing by 1 page (64k)!"
                   );
                 } else {
@@ -161,16 +167,14 @@ class wasMintModule {
                 }
               }
               let ptr = this.#exports.malloc(size);
-              console.info(`[wasMint] malloc(size: ${size}) := ${ptr}`);
+              console.info(`%c%s`, `color: skyblue;`, `[wasMint] malloc(size: ${size}) := ${ptr}`);
               return ptr;
             };
 
             this.memory = this.#importConfig.env.memory;
             this.memory._grow = this.memory.grow;
             this.memory.grow = (pages) => {
-              console.info(
-                `Memory growth requested, growing by ${pages} * 64k bytes`
-              );
+              console.info(`%c%s`, `color: skyblue;`, `Memory growth requested, growing by ${pages} * 64k bytes`);
               return this.memory._grow(pages);
             };
 
@@ -496,12 +500,23 @@ class wasMintModule {
       }
 
       console.table("Configured function listing", this.#__functions__);
-      this.wasMintDispatchEvent(
-        "wasMintWASMConfigured",
-        "INFO",
-        "WASM Module configured."
-      );
+      if(Object.values(this.#__functions__).length !== 0) {
+        this.wasMintDispatchEvent(
+          "wasMintWASMConfigured",
+          "INFO",
+          "WASM Module configured."
+        );
+      } else {
+        this.wasMintDispatchEvent(
+          "wasMintError",
+          "ERROR",
+          "WASM Module is either exporting no functions or the specified WASM file path was invalid."
+        );
+
+      }
+
       this.hash = __hashOf(this);
+      Object.freeze(this);
     })();
   }
 
@@ -568,6 +583,7 @@ class wasMintModule {
   }
 
 }
+
 class wasMintModuleManager {
   *#genID() {
     let id = 0;
@@ -611,12 +627,16 @@ class wasMintModuleManager {
       } else {
         this.modulePoolSize--;
         console.warn(
+          `%c%s`,
+          "color: crimson;",
           `Skipping module addition of module "${name}" due to module pool size threshold.`
         );
         return false;
       }
     } else {
       console.warn(
+        `%c%s`,
+        "color: crimson;",
         `Skipping module addition of module "${name}" because it already exists.`
       );
       return false;
@@ -645,4 +665,3 @@ class wasMintModuleManager {
     return this.__modules__.find((mod) => mod.name === name)?.module ?? null;
   }
 }
-
