@@ -28,11 +28,9 @@
         console.info(`%c%s`, `color: lime; background-color: #232327;`, "wasMint Module configuration success!");
       });
 
-      let functionConfig = await fetch("functionConfig.json").then((cfg) =>
-        cfg.json()
+      await fetch("functionConfig.json").then((cfg) =>
+        Manager.addModule(new wasMintModule("module.wasm", cfg.json(), false, false, "Mod1"))
       );
-      Manager.addModule(new wasMintModule("module.wasm", functionConfig, false, false), "Mod1");
-
     };
   </script>
 </head>
