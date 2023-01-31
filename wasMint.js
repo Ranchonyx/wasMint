@@ -31,7 +31,7 @@ class wasMintModule {
 
   #growMemoryOnAllocWarning = false;
 
-  #debugPrint = () => {};
+  #debugPrint = () => { };
 
   #importConfig = {
     wasi_snapshot_preview1: {
@@ -47,8 +47,8 @@ class wasMintModule {
     },
   };
 
-  #malloc = () => {};
-  #free = () => {};
+  #malloc = () => { };
+  #free = () => { };
 
   constructor(
     wasmPath,
@@ -222,8 +222,7 @@ class wasMintModule {
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate metadata for ${
-              Object.keys(this.#functionConfig).length
+            `Attempting to generate metadata for ${Object.keys(this.#functionConfig).length
             } configurable functions...`
           );
           for (let funKey in tmpFunctions) {
@@ -240,16 +239,14 @@ class wasMintModule {
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Finished generation of ${
-              Object.keys(this.#__functions__).length
+            `Finished generation of ${Object.keys(this.#__functions__).length
             } sets of metadata!`
           );
 
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate interop layers for ${
-              Object.keys(this.#__functions__).length
+            `Attempting to generate interop layers for ${Object.keys(this.#__functions__).length
             } exported functions...`
           );
           for (let funKey in this.#__functions__) {
@@ -263,17 +260,16 @@ class wasMintModule {
                 this.#__functions__[funKey].callback ??= (args) =>
                   console.log(`Callback ${funKey} := ${args})`);
                 this.#__functions__[funKey].callback(
-                  `$${funKey}(${
-                    primaryArgs.join(", ").length > 512
-                      ? `${primaryArgs.join(", ").substring(0, 512)}...`
-                      : primaryArgs.join(", ")
+                  `$${funKey}(${primaryArgs.join(", ").length > 512
+                    ? `${primaryArgs.join(", ").substring(0, 512)}...`
+                    : primaryArgs.join(", ")
                   })`
                 );
               }
               if (
                 primaryArgs.length < 0 ||
                 primaryArgs.length >
-                  this.#__functions__[funKey].params.length ||
+                this.#__functions__[funKey].params.length ||
                 primaryArgs.length < this.#__functions__[funKey].params.length
               ) {
                 throw new Error(
@@ -293,8 +289,7 @@ class wasMintModule {
                   throw new Error(
                     `Invalid parameter type of [${__protoClassOf(
                       primaryArgs[i]
-                    )}] instead of [${
-                      this.#__functions__[funKey].params[i]
+                    )}] instead of [${this.#__functions__[funKey].params[i]
                     }] at [${i}] for [${funKey}]`
                   );
                 }
@@ -412,10 +407,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                      (returnLength = returnLength.replace(
-                        e[0],
-                        finalArgs[e[0].split("")[1]]
-                      ))
+                    (returnLength = returnLength.replace(
+                      e[0],
+                      finalArgs[e[0].split("")[1]]
+                    ))
                   );
                   returnLength = returnLength
                     .replaceAll(" ", "")
@@ -434,10 +429,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                      (returnLength = returnLength.replace(
-                        e[0],
-                        finalArgs[e[0].split("")[1]]
-                      ))
+                    (returnLength = returnLength.replace(
+                      e[0],
+                      finalArgs[e[0].split("")[1]]
+                    ))
                   );
                   returnLength = Function(
                     `"use strict";return ${returnLength};`
@@ -461,8 +456,7 @@ class wasMintModule {
                 throw new Error(
                   `Invalid return type configuration of [${__protoClassOf(
                     finalResult
-                  )}] instead of [${
-                    this.#__functions__[funKey].return.type
+                  )}] instead of [${this.#__functions__[funKey].return.type
                   }] for [${funKey}]`
                 );
               } else {
@@ -473,8 +467,7 @@ class wasMintModule {
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Finished generation of interop layers for ${
-              Object.keys(this.#__functions__).length
+            `Finished generation of interop layers for ${Object.keys(this.#__functions__).length
             } exported functions!`
           );
         })
@@ -535,6 +528,7 @@ class wasMintModule {
       let array = new Uint8Array(this.memory.buffer, ptr, len);
       let dec = new TextDecoder();
       let string = dec.decode(array);
+
       return string;
     } finally {
       this.#free(ptr);
@@ -544,11 +538,10 @@ class wasMintModule {
   wasMintStringToPtr(string) {
     let enc = new TextEncoder();
     let bytes = enc.encode(string);
-
     let ptr = this.#malloc(bytes.byteLength);
-
     let buffer = new Uint8Array(this.memory.buffer, ptr, bytes.byteLength + 1);
     buffer.set(bytes);
+
     return ptr;
   }
 
@@ -564,6 +557,16 @@ class wasMintModule {
     buffer.set(array);
     return ptr;
   }
+
+  peek = (addr) => {
+    return new Uint8Array(this.memory.buffer, addr, 1)[(0)] ?? "NULL";
+  }
+
+  poke = (addr, byte) => {
+    new Uint8Array(this.memory.buffer, addr, 1).set([byte]);
+    return this.peek(addr) === byte ? true : false;
+  }
+
 }
 class wasMintModuleManager {
   *#genID() {
@@ -642,3 +645,4 @@ class wasMintModuleManager {
     return this.__modules__.find((mod) => mod.name === name)?.module ?? null;
   }
 }
+
