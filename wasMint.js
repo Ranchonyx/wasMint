@@ -3,15 +3,6 @@ const __protoClassOf = (obj) => {
 };
 
 const __hashOf = (obj) => {
-  if (!(typeof obj === "object")) {
-    return obj
-      .toString()
-      .split("")
-      .map((e) => e.charCodeAt(0))
-      .reduce((acc, v, i, arr) => (acc += (v % arr[i - 1]) * (i * (acc ^ v))))
-      .toString(16);
-  }
-
   return Object.entries(obj)
     .flat(Infinity)
     .map((e) => e.toString())
@@ -261,7 +252,7 @@ class wasMintModule {
             this.#__functions__[funKey].call = (...primaryArgs) => {
               if (this.#__functions__[funKey].showCallback) {
                 this.#__functions__[funKey].callback ??= (args) =>
-                  console.log(`Callback ${funKey} := ${args})`);
+                  console.log(`Callback ${funKey} := ${args}`);
                 this.#__functions__[funKey].callback(
                   `$${funKey}(${
                     primaryArgs.join(", ").length > 512

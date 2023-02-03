@@ -14,7 +14,7 @@
       "type": "Float32Array",
       "length": 4
     },
-    "showCallback": false
+    "showCallback": true
   },
   "_wasMint_8xf32x4_sub": {
     "params": [

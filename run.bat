@@ -6,7 +6,7 @@ set browserargs="http://localhost:4444/test.html"
 
 set pycommand="python -m http.server -d %cd% --bind 0.0.0.0 4444"
 
-del .\wasMint.wasm
+del .\module.wasm
 
 powershell .\build.ps1
 set ReturnValue=
