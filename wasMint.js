@@ -36,8 +36,7 @@ const __hashOf = (obj) => {
 };
 
 class wasMintModule {
-  #__functions__ = {};
-  #functionConfig = {};
+  #moduleConfig = {};
 
   #internalModuleInstance = {};
   exports = {};
@@ -61,12 +60,12 @@ class wasMintModule {
     },
   };
 
-  #malloc = () => { return 0;};
+  #malloc = () => { return 0; };
   #free = () => { };
 
   constructor(
     wasmPath,
-    functionConfig,
+    moduleConfig,
     globaliseFunctions = false,
     growMemoryOnAllocWarning = false,
     memory = new WebAssembly.Memory({
@@ -98,6 +97,7 @@ class wasMintModule {
       BigUint64Array: BigUint64Array,
     };
 
+    let tmpGlobals = {};
     let tmpFunctions = {};
     let __functions__ = {}
 
@@ -105,18 +105,18 @@ class wasMintModule {
 
     this.#importConfig.env.memory = memory;
 
-    this.#functionConfig = functionConfig;
+    this.#moduleConfig = moduleConfig;
 
     //Assign debugPrint to be callable from WASM / C
     this.#debugPrint = debugPrint;
 
-    //Preinitialize those two...
     this.#internalModuleInstance = {};
     this.exports = {};
 
-    this.properties = {};
+    this.unassignedProperties = {};
 
     this.functions = {};
+    this.globals = {};
 
     //Load and instantiate the WASM module
     this.#wasMintDispatchEvent(
@@ -139,13 +139,38 @@ class wasMintModule {
           this.#internalModuleInstance = obj.instance;
           this.exports = obj.instance.exports;
 
-          //Determine what's a function and what's not and add to the according dictionary
-          Object.entries(this.#internalModuleInstance.exports).forEach(
-            (element) =>
-              typeof element[1] === "function"
-                ? (tmpFunctions[element[0]] = element[1])
-                : (this.properties[element[0]] = element[1])
+          this.#wasMintDispatchEvent(
+            "wasMintInfo",
+            "INFO",
+            "Determining types of exported data..."
           );
+
+          //Determine what's a function and what's not and add to the according dictionary
+          Object.entries(this.#internalModuleInstance.exports).forEach((entry) => {
+            if (__protoClassOf(entry[1]) === "Function") {
+              this.#wasMintDispatchEvent(
+                "wasMintInfo",
+                "INFO",
+                `${entry[0]} => Function`
+              );
+              tmpFunctions[entry[0]] = entry[1];
+            } else if (__protoClassOf(entry[1]) === "Global") {
+              this.#wasMintDispatchEvent(
+                "wasMintInfo",
+                "INFO",
+                `${entry[0]} => Global`
+              );
+              tmpGlobals[entry[0]] = entry[1];
+              console.log(tmpGlobals[entry[0]])
+            } else {
+              this.#wasMintDispatchEvent(
+                "wasMintInfo",
+                "INFO",
+                `${entry[0]} => Unassigned`
+              );
+              this.unassignedProperties[entry[0]] = entry[1];
+            }
+          })
 
           //Firstly check if the WASM Module contains signatures for malloc and free
           if (
@@ -238,12 +263,12 @@ class wasMintModule {
           this.#wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate metadata for ${Object.keys(this.#functionConfig).length
+            `Attempting to generate metadata for ${Object.keys(this.#moduleConfig.functions).length
             } configurable functions...`
           );
           for (let funKey in tmpFunctions) {
-            if (Object.keys(this.#functionConfig).includes(funKey)) {
-              __functions__[funKey] = this.#functionConfig[funKey];
+            if (Object.keys(this.#moduleConfig.functions).includes(funKey)) {
+              __functions__[funKey] = this.#moduleConfig.functions[funKey];
               __functions__[funKey]._function = tmpFunctions[funKey];
               this.#wasMintDispatchEvent(
                 "wasMintInfo",
@@ -404,7 +429,7 @@ class wasMintModule {
                     );
                     break;
                   case "Undefined":
-                    return void 0; //undefined alias
+                    return undefined;
                     break;
                   default:
                     return ptr;
@@ -499,19 +524,39 @@ class wasMintModule {
         this.functions[funcIdentifier] =
           __functions__[funcIdentifier].call;
         Object.defineProperty(this.functions[funcIdentifier], "name", {
-          value: `wasMint#${funcIdentifier}`,
+          value: `wasMint_func$${funcIdentifier}`,
           enumerable: false,
         });
         if (globaliseFunctions) {
           globalThis[funcIdentifier] = __functions__[funcIdentifier].call;
           Object.defineProperty(globalThis[funcIdentifier], "name", {
-            value: `wasMint#${funcIdentifier}`,
+            value: `wasMint_func$${funcIdentifier}`,
             enumerable: false,
           });
         }
       }
 
-      console.table("Configured function listing", __functions__);
+      for (let entry of Object.entries(this.#moduleConfig.globals)) {
+        if (Object.keys(tmpGlobals).includes(entry[0])) {
+          Object.defineProperties(this.globals[entry[0]] = {}, {
+            ptr: {
+              value: tmpGlobals[entry[0]].value,
+              writable: false
+            },
+            name: {
+              value: entry[0],
+              writable: false
+            },
+            meta: {
+              value: entry[1],
+              writable: false
+            }
+          })
+        }
+      }
+
+      console.table("Configured function listing", this.functions);
+      console.table("Exported globals", this.globals)
       this.#wasMintDispatchEvent(
         "wasMintWASMConfigured",
         "INFO",
@@ -540,13 +585,14 @@ class wasMintModule {
     return Object.keys(this.exports).includes(sig);
   }
 
+  #wasMintStrlen(ptr) {
+    return new Uint8Array(this.memory.buffer.slice(ptr, this.memory.buffer.byteLength)).indexOf(0);
+  }
+
   #wasMintPtrToString(ptr) {
-      let baseArray = new Uint8Array(this.memory.buffer.slice(ptr, this.memory.buffer.byteLength));
-      let length = baseArray.indexOf(0);
-      baseArray = baseArray.slice(0, length)
-      let dec = new TextDecoder();
-      let string = dec.decode(baseArray);
-      return string;
+    let dec = new TextDecoder();
+    let string = dec.decode(new Uint8Array(this.memory.buffer, ptr, this.#wasMintStrlen(ptr)));
+    return string;
   }
 
   #wasMintStringToPtr(string) {
@@ -574,8 +620,15 @@ class wasMintModule {
   }
 
   alignCheck = (addr, align) => {
-    if(addr % align === 0) return;
+    if (addr % align === 0) return true;
     throw new Error(`Memory alignment check failed for $${addr} % ${align}`);
+  }
+
+  alignUp = (ptr, align = 4) => {
+    while (ptr % align !== 0) {
+      ++ptr;
+    }
+    return ptr;
   }
 
   peek = (addr) => {
@@ -610,7 +663,6 @@ class wasMintModule {
   }
 
   peekp = (addr) => {
-    this.alignCheck(addr, 4);
     return new DataView(this.memory.buffer).getUint32(addr, true);
   }
 
@@ -622,7 +674,58 @@ class wasMintModule {
     return this.#wasMintPtrToString(ptr);
   }
 
+  readGlobal = (global) => {
+    let name = global.name;
+
+    let readTab = {
+      "Byte": {
+        read: (ptr) => {
+          return new DataView(this.memory.buffer).getUint8(ptr, true)
+        },
+        size: 1
+      },
+      "Word": {
+        read: (ptr) => {
+          return new DataView(this.memory.buffer).getUint16(this.alignUp(ptr, 4), true);
+        }, size: 2
+      },
+      "Dword": {
+        read: (ptr) => {
+          return new DataView(this.memory.buffer).getUint32(this.alignUp(ptr, 4), true);
+        }, size: 4
+      },
+      "Qword": {
+        read: (ptr) => {
+          //Align might be wrong, gotta test!!!
+          return new DataView(this.memory.buffer).getBigUint64(this.alignUp(ptr, 4), true);
+        }, size: 8
+      },
+      "String": {
+        read: (ptr) => {
+          console.log(this.#wasMintStrlen(this.peekp(this.alignUp(ptr))));
+          return this.#wasMintPtrToString(this.peekp(this.alignUp(ptr)));
+        }
+      }
+    }
+
+    if (this.globals[global.name].meta.type === "Struct") {
+      let tmpObject = {}
+      let ptr = global.ptr;
+
+      for (let ft of this.globals[global.name].meta.fields.wasm) {
+        if(ft === "String") {
+          tmpObject[`${ft}+*${this.alignUp(ptr, 4)}`] = readTab[ft].read(ptr);
+          ptr += this.#wasMintStrlen(this.peekp(this.alignUp(ptr, 4)));
+        } else {
+          tmpObject[`${ft}+${ptr}`] = readTab[ft].read(ptr);
+          ptr += readTab[ft].size;
+        }
+      }
+      return tmpObject;
+    }
+  }
 }
+
 class wasMintModuleManager {
   *#genID() {
     let id = 0;
