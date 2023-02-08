@@ -3,14 +3,30 @@ const __protoClassOf = (obj) => {
 };
 
 const __hashOf = (obj) => {
-  return Object.entries(obj)
+  if(typeof obj === "function") throw new Error("Cannot compute hash sum of function.");
+  if(typeof obj === "number" || typeof obj === "bigint" || typeof obj === "boolean" || typeof obj === "undefined" ) return obj;
+
+  let circ = () => {
+    const seen = new WeakSet();
+    return (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return;
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+  };
+
+  let sum = Object.entries(obj)
     .flat(Infinity)
-    .map((e) => e.toString())
+    .map(e => JSON.stringify(e, circ()))
     .join("")
     .split("")
     .map((e) => e.charCodeAt(0))
-    .reduce((acc, v, i, arr) => (acc += (v % arr[i - 1]) * (i * (acc ^ v))))
-    .toString(16);
+    .reduce((acc, v, i, arr) => (acc += (v % arr[i - 1]) * (i * (acc ^ v)))) % 0x1000
+  return `0x${Math.abs(sum)}`
 };
 
 class wasMintModule {
@@ -18,11 +34,11 @@ class wasMintModule {
   #functionConfig = {};
 
   #internalModuleInstance = {};
-  #exports = {};
+  exports = {};
 
   #growMemoryOnAllocWarning = false;
 
-  #debugPrint = () => {};
+  #debugPrint = () => { };
 
   #importConfig = {
     wasi_snapshot_preview1: {
@@ -38,8 +54,8 @@ class wasMintModule {
     },
   };
 
-  #malloc = () => {};
-  #free = () => {};
+  #malloc = () => { };
+  #free = () => { };
 
   constructor(
     wasmPath,
@@ -85,7 +101,7 @@ class wasMintModule {
 
     //Preinitialize those two...
     this.#internalModuleInstance = {};
-    this.#exports = {};
+    this.exports = {};
 
     this.properties = {};
 
@@ -110,7 +126,7 @@ class wasMintModule {
           );
 
           this.#internalModuleInstance = obj.instance;
-          this.#exports = obj.instance.exports;
+          this.exports = obj.instance.exports;
 
           let tmpFunctions = {};
 
@@ -123,14 +139,14 @@ class wasMintModule {
           );
           //Firstly check if the WASM Module contains signatures for malloc and free
           if (
-            this.wasMintHasSignature("malloc") &&
-            this.wasMintHasSignature("free")
+            this.#wasMintHasSignature("malloc") &&
+            this.#wasMintHasSignature("free")
           ) {
             //Shim malloc and free calls to display debug output
             this.#free = (ptr) => {
               if (ptr === 0)
                 throw new Error("[wasMint] free(ptr) := Cannot free *0!");
-              this.#exports.free(ptr);
+              this.exports.free(ptr);
               console.info(`[wasMint] free(ptr: ${ptr});`);
             };
 
@@ -151,7 +167,7 @@ class wasMintModule {
                   );
                 }
               }
-              let ptr = this.#exports.malloc(size);
+              let ptr = this.exports.malloc(size);
               console.info(`[wasMint] malloc(size: ${size}) := ${ptr}`);
               return ptr;
             };
@@ -181,8 +197,8 @@ class wasMintModule {
           //If the module exports a "main" method assign it, if not assign undefined
           this.potentialEntryPoint = undefined;
 
-          if (this.wasMintHasSignature("main")) {
-            this.potentialEntryPoint = this.#exports.main;
+          if (this.#wasMintHasSignature("main")) {
+            this.potentialEntryPoint = this.exports.main;
             this.stateInitialised = false;
             this.init = () => {
               if (this.stateInitialised === false) {
@@ -213,8 +229,7 @@ class wasMintModule {
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate metadata for ${
-              Object.keys(this.#functionConfig).length
+            `Attempting to generate metadata for ${Object.keys(this.#functionConfig).length
             } configurable functions...`
           );
           for (let funKey in tmpFunctions) {
@@ -231,16 +246,14 @@ class wasMintModule {
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Finished generation of ${
-              Object.keys(this.#__functions__).length
+            `Finished generation of ${Object.keys(this.#__functions__).length
             } sets of metadata!`
           );
 
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate interop layers for ${
-              Object.keys(this.#__functions__).length
+            `Attempting to generate interop layers for ${Object.keys(this.#__functions__).length
             } exported functions...`
           );
           for (let funKey in this.#__functions__) {
@@ -254,17 +267,16 @@ class wasMintModule {
                 this.#__functions__[funKey].callback ??= (args) =>
                   console.log(`Callback ${funKey} := ${args}`);
                 this.#__functions__[funKey].callback(
-                  `$${funKey}(${
-                    primaryArgs.join(", ").length > 512
-                      ? `${primaryArgs.join(", ").substring(0, 512)}...`
-                      : primaryArgs.join(", ")
+                  `$${funKey}(${primaryArgs.join(", ").length > 512
+                    ? `${primaryArgs.join(", ").substring(0, 512)}...`
+                    : primaryArgs.join(", ")
                   })`
                 );
               }
               if (
                 primaryArgs.length < 0 ||
                 primaryArgs.length >
-                  this.#__functions__[funKey].params.length ||
+                this.#__functions__[funKey].params.length ||
                 primaryArgs.length < this.#__functions__[funKey].params.length
               ) {
                 throw new Error(
@@ -284,8 +296,7 @@ class wasMintModule {
                   throw new Error(
                     `Invalid parameter type of [${__protoClassOf(
                       primaryArgs[i]
-                    )}] instead of [${
-                      this.#__functions__[funKey].params[i]
+                    )}] instead of [${this.#__functions__[funKey].params[i]
                     }] at [${i}] for [${funKey}]`
                   );
                 }
@@ -403,10 +414,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                      (returnLength = returnLength.replace(
-                        e[0],
-                        finalArgs[e[0].split("")[1]]
-                      ))
+                    (returnLength = returnLength.replace(
+                      e[0],
+                      finalArgs[e[0].split("")[1]]
+                    ))
                   );
                   returnLength = returnLength
                     .replaceAll(" ", "")
@@ -425,10 +436,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                      (returnLength = returnLength.replace(
-                        e[0],
-                        finalArgs[e[0].split("")[1]]
-                      ))
+                    (returnLength = returnLength.replace(
+                      e[0],
+                      finalArgs[e[0].split("")[1]]
+                    ))
                   );
                   returnLength = Function(
                     `"use strict";return ${returnLength};`
@@ -452,8 +463,7 @@ class wasMintModule {
                 throw new Error(
                   `Invalid return type configuration of [${__protoClassOf(
                     finalResult
-                  )}] instead of [${
-                    this.#__functions__[funKey].return.type
+                  )}] instead of [${this.#__functions__[funKey].return.type
                   }] for [${funKey}]`
                 );
               } else {
@@ -464,8 +474,7 @@ class wasMintModule {
           this.wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Finished generation of interop layers for ${
-              Object.keys(this.#__functions__).length
+            `Finished generation of interop layers for ${Object.keys(this.#__functions__).length
             } exported functions!`
           );
         })
@@ -500,6 +509,7 @@ class wasMintModule {
         "WASM Module configured."
       );
       this.hash = __hashOf(this);
+      Object.freeze(this)
     })();
   }
 
@@ -517,8 +527,8 @@ class wasMintModule {
     );
   }
 
-  wasMintHasSignature(sig) {
-    return Object.keys(this.#exports).includes(sig);
+  #wasMintHasSignature(sig) {
+    return Object.keys(this.exports).includes(sig);
   }
 
   wasMintPtrToString(ptr, len) {
