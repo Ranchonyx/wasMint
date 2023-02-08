@@ -1,8 +1,7 @@
 #include "wasMint.h"
 
 WASMINT_EXPORT const char* exported_str_1 = "Hello, World!";
-WASMINT_EXPORT char * exported_str_2 = "Goodbye, World!";
-
+WASMINT_EXPORT const char exported_str_2[15] = "Goodbye, World!";
 
 //SIMD Stuff: <param_count>x<type>x<return_count>_<operation>
 WASMINT_EXPORT float* _wasMint_8xf32x4_add(float a, float b, float c, float d, float e, float f, float g, float h) {
@@ -73,6 +72,7 @@ WASMINT_EXPORT uint32_t* _wasMint_arrayXOR(uint32_t* a, size_t alen, uint32_t* b
 WASMINT_EXPORT int main() {
     wasMint_string startup_message = "wasMint Initialized!";
     _wasMint_print(startup_message);
+    free(startup_message);
 
     return 0;
 }
