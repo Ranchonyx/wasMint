@@ -6,6 +6,12 @@ const __hashOf = (obj) => {
   if(typeof obj === "function") throw new Error("Cannot compute hash sum of function.");
   if(typeof obj === "number" || typeof obj === "bigint" || typeof obj === "boolean" || typeof obj === "undefined" ) return obj;
 
+  if(obj.hasOwnProperty("length")) {
+    if(obj.length === 0) {
+      return null;
+    } 
+  }
+
   let circ = () => {
     const seen = new WeakSet();
     return (key, value) => {
@@ -25,9 +31,9 @@ const __hashOf = (obj) => {
     .join("")
     .split("")
     .map((e) => e.charCodeAt(0))
-    .reduce((acc, v, i, arr) => (acc += (v % arr[i - 1]) * (i * (acc ^ v)))) % 0x1000
-  return `0x${Math.abs(sum)}`
-};
+    .reduce((acc, v, i, arr) => (acc += (v * arr[i - 1] % 0xFFFFFFFFFFFFFFFF) * (i + (acc ^ v)))) % 0xFFFFFFFFFFFFFFFF
+    return "0x"+`${Math.abs(sum)}`.padStart(16, 0)
+  };
 
 class wasMintModule {
   #__functions__ = {};
