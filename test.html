@@ -1,32 +1,29 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <script src="wasMint.js"></script>
+    <script>
+      const Module = null;
 
-<head>
-  <script src="wasMint.js"></script>
-  <script>
-    const Module = null;
-
-    window.onload = async () => {
-      addEventListener("wasMintError", (details) => {
-        console.error(
-          `%c%s%s`, `color: crimson; background-color: #232327;`,
-          "wasMint Error",
-          `[${details.detail.type}] "${details.detail.msg}"`
-        );
-      });
-      addEventListener("wasMintInfo", (details) => {
-        console.debug(
-          `%c%s%s`, `color: cyan; background-color: #232327;`,
-          "wasMint Info",
-          `[${details.detail.type}] "${details.detail.msg}"`
-        );
-      });
-      addEventListener("wasMintWASMLoaded", (details) => {
-        console.info(`%c%s`, `color: lime; background-color: #232327;`, "wasMint has successfully loaded WASM!");
-      });
-      addEventListener("wasMintWASMConfigured", (details) => {
-        console.info(`%c%s`, `color: lime; background-color: #232327;`, "wasMint Module configuration success!");
-      });
+      window.onload = async () => {
+        addEventListener("wasMintError", (details) => {
+          console.error(
+            "wasMint Error",
+            `[${details.detail.type}] "${details.detail.msg}"`
+          );
+        });
+        addEventListener("wasMintInfo", (details) => {
+          console.debug(
+            "wasMint Info",
+            `[${details.detail.type}] "${details.detail.msg}"`
+          );
+        });
+        addEventListener("wasMintWASMLoaded", (details) => {
+          console.info("wasMint has successfully loaded WASM!");
+        });
+        addEventListener("wasMintWASMConfigured", (details) => {
+          console.info("wasMint Module configuration success!");
+        });
 
       await fetch("functionConfig.json")
         .then((cfg) => cfg.json())
