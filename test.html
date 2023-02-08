@@ -4,7 +4,7 @@
 <head>
   <script src="wasMint.js"></script>
   <script>
-    const Manager = new wasMintModuleManager();
+    const Module = null;
 
     window.onload = async () => {
       addEventListener("wasMintError", (details) => {
@@ -28,9 +28,11 @@
         console.info(`%c%s`, `color: lime; background-color: #232327;`, "wasMint Module configuration success!");
       });
 
-      await fetch("functionConfig.json").then((cfg) =>
-        Manager.addModule(new wasMintModule("module.wasm", cfg.json(), false, false, "Mod1"))
-      );
+      await fetch("functionConfig.json")
+        .then((cfg) => cfg.json())
+        .then(config => {
+          Module = new wasMintModule("module.wasm", config, false, false);
+        });
     };
   </script>
 </head>

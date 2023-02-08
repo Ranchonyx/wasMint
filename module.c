@@ -1,5 +1,9 @@
 #include "wasMint.h"
 
+WASMINT_EXPORT const char* exported_str_1 = "Hello, World!";
+WASMINT_EXPORT char * exported_str_2 = "Goodbye, World!";
+
+
 //SIMD Stuff: <param_count>x<type>x<return_count>_<operation>
 WASMINT_EXPORT float* _wasMint_8xf32x4_add(float a, float b, float c, float d, float e, float f, float g, float h) {
     __m128 v1 = wasm_f32x4_make(a, b, c, d);
