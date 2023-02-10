@@ -8,10 +8,8 @@ typedef struct state {
     uint16_t ax;
     uint32_t eax;
     char* model;
-} state_t;
+} WASMINT_STRUCT state_t;
 
-WASMINT_EXPORT const char* exported_str = "Hello, World!";
-WASMINT_EXPORT const uint32_t exported_number = 0xFFFFFFFF;
 WASMINT_EXPORT state_t exported_state;
 
 //SIMD Stuff: <param_count>x<type>x<return_count>_<operation>
@@ -80,17 +78,16 @@ WASMINT_EXPORT uint32_t* _wasMint_arrayXOR(uint32_t* a, size_t alen, uint32_t* b
     return c;
 }
 
-WASMINT_EXPORT int main() {
-    wasMint_string startup_message = "wasMint Initialized!";
+WASMINT_EXPORT void WMINIT() {
+    wmString startup_message = "Init!";
     _wasMint_print(startup_message);
 
     exported_state.ip = 0xFF;
     exported_state.al = 'A';
     exported_state.modelb = "This program cannot be run in DOS mode kekw";
     exported_state.ah = 'B';
-    exported_state.ax = ((uint16_t)'B' << 8) | 'A';
+    exported_state.ax = 0xAAAA;
     exported_state.eax = 0xFFFFFFFF;
     exported_state.model = "Intel (r) Mediokrum Rev. 2 @ 3.1415 gHz";
-
-    return 0;
+    return;
 }

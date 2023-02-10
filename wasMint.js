@@ -161,7 +161,6 @@ class wasMintModule {
                 `${entry[0]} => Global`
               );
               tmpGlobals[entry[0]] = entry[1];
-              console.log(tmpGlobals[entry[0]])
             } else {
               this.#wasMintDispatchEvent(
                 "wasMintInfo",
@@ -232,8 +231,8 @@ class wasMintModule {
           //If the module exports a "main" method assign it, if not assign undefined
           this.potentialEntryPoint = undefined;
 
-          if (this.#wasMintHasSignature("main")) {
-            this.potentialEntryPoint = this.exports.main;
+          if (this.#wasMintHasSignature("WMINIT")) {
+            this.potentialEntryPoint = this.exports.WMINIT;
             this.init = () => {
               if (this.#stateInitialised === false) {
                 this.#wasMintDispatchEvent(
@@ -619,55 +618,62 @@ class wasMintModule {
     return ptr;
   }
 
-  alignCheck = (addr, align) => {
-    if (addr % align === 0) return true;
-    throw new Error(`Memory alignment check failed for $${addr} % ${align}`);
+  /**
+   * Check the alignment of `ptr` via `ptr % align === 0`
+   * @param {number} ptr 
+   * @param {number} align 
+   * @returns true | false
+   */
+  alignCheck = (ptr, align) => {
+    return (ptr % align === 0) ?  true : false;
   }
 
-  alignUp = (ptr, align = 4) => {
+  /**
+   * Aligns `ptr` upwards to the nearest pointer where `ptr % align === 0`
+   * @param {number} ptr 
+   * @param {align} align 
+   * @returns The up-aligned pointer
+   */
+  alignUp = (ptr, align) => {
     while (ptr % align !== 0) {
       ++ptr;
     }
     return ptr;
   }
 
-  peek = (addr) => {
-    return new Uint8Array(this.memory.buffer, addr, 1)[(0)] ?? "NULL";
+  peek = (ptr) => {
+    return new Uint8Array(this.memory.buffer, ptr, 1)[(0)] ?? "NULL";
   }
 
-  peekw = (addr) => {
-    this.alignCheck(addr, 2);
-    return new Uint16Array(this.memory.buffer, addr, 1)[(0)] ?? "NULL";
+  peekw = (ptr) => {
+    if(!this.alignCheck(ptr, 2)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
+    return new Uint16Array(this.memory.buffer, ptr, 1)[(0)] ?? "NULL";
   }
 
-  peekd = (addr) => {
-    this.alignCheck(addr, 4)
-    return new Uint32Array(this.memory.buffer, addr, 1)[(0)] ?? "NULL";
+  peekd = (ptr) => {
+    if(!this.alignCheck(ptr, 4)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
+    return new Uint32Array(this.memory.buffer, ptr, 1)[(0)] ?? "NULL";
   }
 
-  poke = (addr, data) => {
-    new Uint8Array(this.memory.buffer, addr, 1).set([data]);
-    return this.peek(addr) === data ? true : false;
+  poke = (ptr, data) => {
+    new Uint8Array(this.memory.buffer, ptr, 1).set([data]);
+    return this.peek(ptr) === data ? true : false;
   }
 
-  pokew = (addr, data) => {
-    this.alignCheck(addr, 2);
-    new Uint16Array(this.memory.buffer, addr, 1).set([data]);
-    return this.peekw(addr) === data ? true : false;
+  pokew = (ptr, data) => {
+    if(!this.alignCheck(ptr, 2)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
+    new Uint16Array(this.memory.buffer, ptr, 1).set([data]);
+    return this.peekw(ptr) === data ? true : false;
   }
 
-  poked = (addr, data) => {
-    this.alignCheck(addr, 4);
-    new Uint32Array(this.memory.buffer, addr, 1).set([data]);
-    return this.peekd(addr) === data ? true : false;
+  poked = (ptr, data) => {
+    if(!this.alignCheck(ptr, 4)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
+    new Uint32Array(this.memory.buffer, ptr, 1).set([data]);
+    return this.peekd(ptr) === data ? true : false;
   }
 
-  peekp = (addr) => {
-    return new DataView(this.memory.buffer).getUint32(addr, true);
-  }
-
-  readStringExport = (ptr) => {
-    return this.#wasMintPtrToString(this.peekp(ptr))
+  peekp = (ptr) => {
+    return new DataView(this.memory.buffer).getUint32(ptr, true);
   }
 
   readCharArrayExport = (ptr) => {
@@ -675,8 +681,6 @@ class wasMintModule {
   }
 
   readGlobal = (global) => {
-    let name = global.name;
-
     let readTab = {
       "Byte": {
         read: (ptr) => {
@@ -686,25 +690,25 @@ class wasMintModule {
       },
       "Word": {
         read: (ptr) => {
-          return new DataView(this.memory.buffer).getUint16(this.alignUp(ptr, 4), true);
+          return new DataView(this.memory.buffer).getUint16(ptr, true);
         }, size: 2
       },
       "Dword": {
         read: (ptr) => {
-          return new DataView(this.memory.buffer).getUint32(this.alignUp(ptr, 4), true);
+          return new DataView(this.memory.buffer).getUint32(ptr, true);
         }, size: 4
       },
       "Qword": {
         read: (ptr) => {
           //Align might be wrong, gotta test!!!
-          return new DataView(this.memory.buffer).getBigUint64(this.alignUp(ptr, 4), true);
+          return new DataView(this.memory.buffer).getBigUint64(ptr, true);
         }, size: 8
       },
       "String": {
         read: (ptr) => {
-          console.log(this.#wasMintStrlen(this.peekp(this.alignUp(ptr))));
-          return this.#wasMintPtrToString(this.peekp(this.alignUp(ptr)));
-        }
+          return this.#wasMintPtrToString(this.peekp(ptr));
+        },
+        size: 4
       }
     }
 
@@ -714,12 +718,12 @@ class wasMintModule {
 
       for (let ft of this.globals[global.name].meta.fields.wasm) {
         if(ft === "String") {
-          tmpObject[`${ft}+*${this.alignUp(ptr, 4)}`] = readTab[ft].read(ptr);
-          ptr += this.#wasMintStrlen(this.peekp(this.alignUp(ptr, 4)));
+          tmpObject[`${ft}+*${ptr}`] = readTab[ft].read(ptr);
         } else {
           tmpObject[`${ft}+${ptr}`] = readTab[ft].read(ptr);
-          ptr += readTab[ft].size;
         }
+
+        ptr += readTab[ft].size;
       }
       return tmpObject;
     }

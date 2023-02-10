@@ -66,11 +66,34 @@ constructor wasMintModule(wasmPath, functionConfig, globaliseFunctions, growMemo
 
 After the constructor is done ... constructing, you will be able to find your wanted functions on the respective wasMint module's `functions` property, or, if you have `globaliseFunctions` enabled, on the `globalThis` object, without having to call them from the respective wasMint module directly, which is quite nice.
 
-### Typechecking and hashing
-
+### Exposed functions
+wasMint exposes several functions that can be useful when working with
+WebAssembly of any kind, and also in general.
+#### Utility
 - > `__protoClassOf(obj)` fairly reliably returns the class name of any class instance, or the classic `typeof` if it is given a standard object.
 
 - > `__hashOf(obj)` returns a reliable hash of its parameter, regardless of type. I tested it on 1.000.000 uniquely generated 16 character long hexadecimal strings and it produced _zero_ collisions.
+
+#### Memory alignment
+- > `alignCheck(ptr, align)` returns `true` or `false` depending on if the `ptr` is aligned at `align` byte boundaries.
+
+- > `alignUp(ptr, align)` aligns the `ptr` upwards to be aligned at `align` byte boundaries.
+
+#### Memory read/write
+##### Peeks
+- > `peek(ptr)` reads the *byte value* in the Module's memory at the location specified by `ptr`.
+
+- > `peekw(ptr)` reads the *word value* in the Module's memory at the location specified by `ptr`.
+
+- > `peekd(ptr)` reads the *dword value* in the Module's memory at the location specified by `ptr`.
+
+- > `peekp(ptr)` reads the *dword pointer value* in the Module's memory at the location specified by `ptr`.
+##### Pokes
+- > `poke(ptr, data)` writes the *byte value* of `data` to the location specified by `ptr` in the Module's memory.
+
+- > `pokew(ptr, data)` writes the *word value* of `data` to the location specified by `ptr` in the Module's memory.
+
+- > `pokd(ptr, data)` writes the *dword value* of `data` to the location specified by `ptr` in the Module's memory.
 
 ### Events
 wasMint emits the following events, further details about the event can be found in the event's detail parameters:

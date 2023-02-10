@@ -8,25 +8,37 @@
 
 #define FMT_MAX_CHARS 256
 
-typedef char byte;
-typedef char* wasMint_bytearray;
-typedef const wasMint_bytearray wasMint_string;
-typedef uint64_t wasMint_bigint;
+typedef char wmByte;
+typedef char* wmBytea;
+typedef const char* wmString;
+typedef uint64_t wmBigInt;
 
 #define __fl4size 4 * sizeof(float)
+
+typedef void(*init_func_t)(void);
+#define MODULE_INIT(init_func) \
+WASMINT_EXPORT void WMINIT(init_func_t* init_func) { \
+    wmString startup_message = "wasMint Initialized!"; \
+    _wasMint_print(startup_message); \
+    (*init_func)(); \
+    return;\
+} \
+
+
 #define WASMINT_EXPORT __attribute__((used))
 #define WASMINT_IMPORT extern __attribute__((unused))
+#define WASMINT_STRUCT __attribute__((packed))
 
 //Begin wasMint export declarations
-WASMINT_EXPORT wasMint_bytearray _wasMint_fmt(wasMint_string fmt, ...);
-WASMINT_EXPORT void _wasMint_print(wasMint_string str);
+WASMINT_EXPORT wmBytea _wasMint_fmt(wmString fmt, ...);
+WASMINT_EXPORT void _wasMint_print(wmString str);
 
 //Begin wasMint import declarations
-WASMINT_IMPORT void _wasMint_js_print(wasMint_string ptr, int len);
+WASMINT_IMPORT void _wasMint_js_print(wmString ptr, int len);
 
-wasMint_bytearray _wasMint_fmt(wasMint_string fmt, ...) {
+wmBytea _wasMint_fmt(wmString fmt, ...) {
     size_t base_len = (strlen(fmt) + FMT_MAX_CHARS) + 1;
-    wasMint_bytearray buf = (wasMint_bytearray) malloc(base_len);
+    wmBytea buf = (wmBytea) malloc(base_len);
     va_list args;
     
     va_start(args, fmt);
@@ -37,13 +49,20 @@ wasMint_bytearray _wasMint_fmt(wasMint_string fmt, ...) {
     return buf;
 }
 
-WASMINT_EXPORT void _wasMint_print(wasMint_string str) {
-    size_t len = strlen(str);
+int wmStrlen(const char *s)
+{
+	const char *a = s;
+	for (; *s; s++);
+	return s-a;
+}
+
+WASMINT_EXPORT void _wasMint_print(wmString str) {
+    size_t len = wmStrlen(str);
 
     if(len > FMT_MAX_CHARS) {
             return;
     } else {
-        wasMint_bytearray buf = (wasMint_bytearray) malloc(len + 1);
+        wmBytea buf = (wmBytea) malloc(len + 1);
         
         strncpy(buf, str, len);
         _wasMint_js_print(str, len);
