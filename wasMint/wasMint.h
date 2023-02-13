@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <xmmintrin.h>
 #include <wasm_simd128.h>
+//#include <pthread.h>
 
 #define FMT_MAX_CHARS 256
 
@@ -13,9 +14,10 @@ typedef char* wmBytea;
 typedef const char* wmString;
 typedef uint64_t wmBigInt;
 
-#define __fl4size 4 * sizeof(float)
+typedef void* wmRawPointer;
 
 typedef void(*init_func_t)(void);
+
 #define MODULE_INIT(init_func) \
 WASMINT_EXPORT void WMINIT(init_func_t* init_func) { \
     wmString startup_message = "wasMint Initialized!"; \
@@ -28,6 +30,9 @@ WASMINT_EXPORT void WMINIT(init_func_t* init_func) { \
 #define WASMINT_EXPORT __attribute__((used))
 #define WASMINT_IMPORT extern __attribute__((unused))
 #define WASMINT_STRUCT __attribute__((packed))
+#define WMENTRY WASMINT_EXPORT void WMINIT
+
+#define __fl4size 4 * sizeof(float)
 
 //Begin wasMint export declarations
 WASMINT_EXPORT wmBytea _wasMint_fmt(wmString fmt, ...);
@@ -35,6 +40,9 @@ WASMINT_EXPORT void _wasMint_print(wmString str);
 
 //Begin wasMint import declarations
 WASMINT_IMPORT void _wasMint_js_print(wmString ptr, int len);
+
+//IPC Channel
+WASMINT_EXPORT wmByte ipc[8];
 
 wmBytea _wasMint_fmt(wmString fmt, ...) {
     size_t base_len = (strlen(fmt) + FMT_MAX_CHARS) + 1;

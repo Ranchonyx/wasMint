@@ -101,14 +101,24 @@
         "length": "J A1 < A3 ? A1 : A3"
       },
       "showCallback": false
+    },
+    "next_frame": {
+      "params": [
+        "Number"
+      ],
+      "return": {
+        "type": "Void",
+        "length": 0
+      }
     }
   },
   "globals": {
-    "exported_number": {
-      "type": "Number"
+    "fb": {
+      "type": "Uint8Array",
+      "length": 20000
     },
-    "exported_str": {
-      "type": "String"
+    "controlRegister": {
+      "type": "Number"
     },
     "exported_state": {
       "type": "Struct",

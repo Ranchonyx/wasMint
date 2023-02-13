@@ -3,8 +3,15 @@ const __protoClassOf = (obj) => {
 };
 
 const __hashOf = (obj) => {
-  if (typeof obj === "function") throw new Error("Cannot compute hash sum of function.");
-  if (typeof obj === "number" || typeof obj === "bigint" || typeof obj === "boolean" || typeof obj === "undefined") return obj;
+  if (typeof obj === "function")
+    throw new Error("Cannot compute hash sum of function.");
+  if (
+    typeof obj === "number" ||
+    typeof obj === "bigint" ||
+    typeof obj === "boolean" ||
+    typeof obj === "undefined"
+  )
+    return obj;
 
   if (obj.hasOwnProperty("length")) {
     if (obj.length === 0) {
@@ -25,14 +32,18 @@ const __hashOf = (obj) => {
     };
   };
 
-  let sum = Object.entries(obj)
-    .flat(Infinity)
-    .map(e => JSON.stringify(e, circ()))
-    .join("")
-    .split("")
-    .map((e) => e.charCodeAt(0))
-    .reduce((acc, v, i, arr) => (acc += (v * arr[i - 1] % 0xFFFFFFFFFFFFFFFF) * (i + (acc ^ v)))) % 0xFFFFFFFFFFFFFFFF
-  return "0x" + `${Math.abs(sum)}`.padStart(16, 0)
+  let sum =
+    Object.entries(obj)
+      .flat(Infinity)
+      .map((e) => JSON.stringify(e, circ()))
+      .join("")
+      .split("")
+      .map((e) => e.charCodeAt(0))
+      .reduce(
+        (acc, v, i, arr) =>
+          (acc += ((v * arr[i - 1]) % 0xffffffffffffffff) * (i + (acc ^ v)))
+      ) % 0xffffffffffffffff;
+  return "0x" + `${Math.abs(sum)}`.padStart(16, 0);
 };
 
 class wasMintModule {
@@ -44,7 +55,7 @@ class wasMintModule {
   #growMemoryOnAllocWarning = false;
   #stateInitialised = false;
 
-  #debugPrint = () => { };
+  #debugPrint = () => {};
 
   #importConfig = {
     wasi_snapshot_preview1: {
@@ -60,8 +71,10 @@ class wasMintModule {
     },
   };
 
-  #malloc = () => { return 0; };
-  #free = () => { };
+  #malloc = () => {
+    return 0;
+  };
+  #free = () => {};
 
   constructor(
     wasmPath,
@@ -70,7 +83,8 @@ class wasMintModule {
     growMemoryOnAllocWarning = false,
     memory = new WebAssembly.Memory({
       initial: 16,
-      maximum: 32,
+      maximum: 16,
+      shared: false,
     }),
     debugPrint = (ptr, len) => {
       console.log(
@@ -99,7 +113,7 @@ class wasMintModule {
 
     let tmpGlobals = {};
     let tmpFunctions = {};
-    let __functions__ = {}
+    let __functions__ = {};
 
     this.#growMemoryOnAllocWarning = growMemoryOnAllocWarning;
 
@@ -146,30 +160,32 @@ class wasMintModule {
           );
 
           //Determine what's a function and what's not and add to the according dictionary
-          Object.entries(this.#internalModuleInstance.exports).forEach((entry) => {
-            if (__protoClassOf(entry[1]) === "Function") {
-              this.#wasMintDispatchEvent(
-                "wasMintInfo",
-                "INFO",
-                `${entry[0]} => Function`
-              );
-              tmpFunctions[entry[0]] = entry[1];
-            } else if (__protoClassOf(entry[1]) === "Global") {
-              this.#wasMintDispatchEvent(
-                "wasMintInfo",
-                "INFO",
-                `${entry[0]} => Global`
-              );
-              tmpGlobals[entry[0]] = entry[1];
-            } else {
-              this.#wasMintDispatchEvent(
-                "wasMintInfo",
-                "INFO",
-                `${entry[0]} => Unassigned`
-              );
-              this.unassignedProperties[entry[0]] = entry[1];
+          Object.entries(this.#internalModuleInstance.exports).forEach(
+            (entry) => {
+              if (__protoClassOf(entry[1]) === "Function") {
+                this.#wasMintDispatchEvent(
+                  "wasMintInfo",
+                  "INFO",
+                  `${entry[0]} => Function`
+                );
+                tmpFunctions[entry[0]] = entry[1];
+              } else if (__protoClassOf(entry[1]) === "Global") {
+                this.#wasMintDispatchEvent(
+                  "wasMintInfo",
+                  "INFO",
+                  `${entry[0]} => Global`
+                );
+                tmpGlobals[entry[0]] = entry[1];
+              } else {
+                this.#wasMintDispatchEvent(
+                  "wasMintInfo",
+                  "INFO",
+                  `${entry[0]} => Unassigned`
+                );
+                this.unassignedProperties[entry[0]] = entry[1];
+              }
             }
-          })
+          );
 
           //Firstly check if the WASM Module contains signatures for malloc and free
           if (
@@ -233,14 +249,14 @@ class wasMintModule {
 
           if (this.#wasMintHasSignature("WMINIT")) {
             this.potentialEntryPoint = this.exports.WMINIT;
-            this.init = () => {
+            this.init = (...initArgs) => {
               if (this.#stateInitialised === false) {
+                this.potentialEntryPoint(initArgs);
                 this.#wasMintDispatchEvent(
                   "wasMintInfo",
                   "INFO",
                   "WASM Module initialised."
                 );
-                this.potentialEntryPoint();
                 this.#stateInitialised = true;
               } else {
                 this.#wasMintDispatchEvent(
@@ -262,7 +278,8 @@ class wasMintModule {
           this.#wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate metadata for ${Object.keys(this.#moduleConfig.functions).length
+            `Attempting to generate metadata for ${
+              Object.keys(this.#moduleConfig.functions).length
             } configurable functions...`
           );
           for (let funKey in tmpFunctions) {
@@ -279,14 +296,16 @@ class wasMintModule {
           this.#wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Finished generation of ${Object.keys(__functions__).length
+            `Finished generation of ${
+              Object.keys(__functions__).length
             } sets of metadata!`
           );
 
           this.#wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate interop layers for ${Object.keys(__functions__).length
+            `Attempting to generate interop layers for ${
+              Object.keys(__functions__).length
             } exported functions...`
           );
           for (let funKey in __functions__) {
@@ -300,16 +319,16 @@ class wasMintModule {
                 __functions__[funKey].callback ??= (args) =>
                   console.log(`Callback ${funKey} := ${args}`);
                 __functions__[funKey].callback(
-                  `$${funKey}(${primaryArgs.join(", ").length > 512
-                    ? `${primaryArgs.join(", ").substring(0, 512)}...`
-                    : primaryArgs.join(", ")
+                  `$${funKey}(${
+                    primaryArgs.join(", ").length > 512
+                      ? `${primaryArgs.join(", ").substring(0, 512)}...`
+                      : primaryArgs.join(", ")
                   })`
                 );
               }
               if (
                 primaryArgs.length < 0 ||
-                primaryArgs.length >
-                __functions__[funKey].params.length ||
+                primaryArgs.length > __functions__[funKey].params.length ||
                 primaryArgs.length < __functions__[funKey].params.length
               ) {
                 throw new Error(
@@ -317,11 +336,7 @@ class wasMintModule {
                 );
               }
 
-              for (
-                let i = 0;
-                i < __functions__[funKey].params.length;
-                i++
-              ) {
+              for (let i = 0; i < __functions__[funKey].params.length; i++) {
                 if (
                   __protoClassOf(primaryArgs[i]) !==
                   __functions__[funKey].params[i]
@@ -329,7 +344,8 @@ class wasMintModule {
                   throw new Error(
                     `Invalid parameter type of [${__protoClassOf(
                       primaryArgs[i]
-                    )}] instead of [${__functions__[funKey].params[i]
+                    )}] instead of [${
+                      __functions__[funKey].params[i]
                     }] at [${i}] for [${funKey}]`
                   );
                 }
@@ -358,9 +374,7 @@ class wasMintModule {
                 return tmpArgs;
               };
               let finalArgs = castArgs(primaryArgs);
-              let primaryResult = __functions__[funKey]._function(
-                ...finalArgs
-              );
+              let primaryResult = __functions__[funKey]._function(...finalArgs);
 
               let castResult = (ptr, len) => {
                 switch (__functions__[funKey].return.type) {
@@ -447,10 +461,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                    (returnLength = returnLength.replace(
-                      e[0],
-                      finalArgs[e[0].split("")[1]]
-                    ))
+                      (returnLength = returnLength.replace(
+                        e[0],
+                        finalArgs[e[0].split("")[1]]
+                      ))
                   );
                   returnLength = returnLength
                     .replaceAll(" ", "")
@@ -469,10 +483,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                    (returnLength = returnLength.replace(
-                      e[0],
-                      finalArgs[e[0].split("")[1]]
-                    ))
+                      (returnLength = returnLength.replace(
+                        e[0],
+                        finalArgs[e[0].split("")[1]]
+                      ))
                   );
                   returnLength = Function(
                     `"use strict";return ${returnLength};`
@@ -496,7 +510,8 @@ class wasMintModule {
                 throw new Error(
                   `Invalid return type configuration of [${__protoClassOf(
                     finalResult
-                  )}] instead of [${__functions__[funKey].return.type
+                  )}] instead of [${
+                    __functions__[funKey].return.type
                   }] for [${funKey}]`
                 );
               } else {
@@ -507,7 +522,8 @@ class wasMintModule {
           this.#wasMintDispatchEvent(
             "wasMintInfo",
             "INFO",
-            `Finished generation of interop layers for ${Object.keys(__functions__).length
+            `Finished generation of interop layers for ${
+              Object.keys(__functions__).length
             } exported functions!`
           );
         })
@@ -520,8 +536,7 @@ class wasMintModule {
         });
 
       for (let funcIdentifier of Object.keys(__functions__)) {
-        this.functions[funcIdentifier] =
-          __functions__[funcIdentifier].call;
+        this.functions[funcIdentifier] = __functions__[funcIdentifier].call;
         Object.defineProperty(this.functions[funcIdentifier], "name", {
           value: `wasMint_func$${funcIdentifier}`,
           enumerable: false,
@@ -537,32 +552,32 @@ class wasMintModule {
 
       for (let entry of Object.entries(this.#moduleConfig.globals)) {
         if (Object.keys(tmpGlobals).includes(entry[0])) {
-          Object.defineProperties(this.globals[entry[0]] = {}, {
+          Object.defineProperties((this.globals[entry[0]] = {}), {
             ptr: {
               value: tmpGlobals[entry[0]].value,
-              writable: false
+              writable: false,
             },
             name: {
               value: entry[0],
-              writable: false
+              writable: false,
             },
             meta: {
               value: entry[1],
-              writable: false
-            }
-          })
+              writable: false,
+            },
+          });
         }
       }
 
       console.table("Configured function listing", this.functions);
-      console.table("Exported globals", this.globals)
+      console.table("Exported globals", this.globals);
       this.#wasMintDispatchEvent(
         "wasMintWASMConfigured",
         "INFO",
         "WASM Module configured."
       );
       this.hash = __hashOf(this);
-      Object.freeze(this)
+      Object.freeze(this);
     })();
   }
 
@@ -585,12 +600,16 @@ class wasMintModule {
   }
 
   #wasMintStrlen(ptr) {
-    return new Uint8Array(this.memory.buffer.slice(ptr, this.memory.buffer.byteLength)).indexOf(0);
+    return new Uint8Array(
+      this.memory.buffer.slice(ptr, this.memory.buffer.byteLength)
+    ).indexOf(0);
   }
 
   #wasMintPtrToString(ptr) {
     let dec = new TextDecoder();
-    let string = dec.decode(new Uint8Array(this.memory.buffer, ptr, this.#wasMintStrlen(ptr)));
+    let string = dec.decode(
+      new Uint8Array(this.memory.buffer, ptr, this.#wasMintStrlen(ptr))
+    );
     return string;
   }
 
@@ -618,20 +637,22 @@ class wasMintModule {
     return ptr;
   }
 
+  #wasMintIPC_J2M(str) {}
+
   /**
    * Check the alignment of `ptr` via `ptr % align === 0`
-   * @param {number} ptr 
-   * @param {number} align 
+   * @param {number} ptr
+   * @param {number} align
    * @returns true | false
    */
   alignCheck = (ptr, align) => {
-    return (ptr % align === 0) ?  true : false;
-  }
+    return ptr % align === 0 ? true : false;
+  };
 
   /**
    * Aligns `ptr` upwards to the nearest pointer where `ptr % align === 0`
-   * @param {number} ptr 
-   * @param {align} align 
+   * @param {number} ptr
+   * @param {align} align
    * @returns The up-aligned pointer
    */
   alignUp = (ptr, align) => {
@@ -639,94 +660,170 @@ class wasMintModule {
       ++ptr;
     }
     return ptr;
-  }
+  };
 
   peek = (ptr) => {
-    return new Uint8Array(this.memory.buffer, ptr, 1)[(0)] ?? "NULL";
-  }
+    return new Uint8Array(this.memory.buffer, ptr, 1)[0] ?? "NULL";
+  };
 
   peekw = (ptr) => {
-    if(!this.alignCheck(ptr, 2)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
-    return new Uint16Array(this.memory.buffer, ptr, 1)[(0)] ?? "NULL";
-  }
+    if (!this.alignCheck(ptr, 2))
+      throw new Error(
+        `Memory alignment check failed for *0x${ptr.toString(16)}`
+      );
+    return new Uint16Array(this.memory.buffer, ptr, 1)[0] ?? "NULL";
+  };
 
   peekd = (ptr) => {
-    if(!this.alignCheck(ptr, 4)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
-    return new Uint32Array(this.memory.buffer, ptr, 1)[(0)] ?? "NULL";
-  }
+    if (!this.alignCheck(ptr, 4))
+      throw new Error(
+        `Memory alignment check failed for *0x${ptr.toString(16)}`
+      );
+    return new Uint32Array(this.memory.buffer, ptr, 1)[0] ?? "NULL";
+  };
 
   poke = (ptr, data) => {
     new Uint8Array(this.memory.buffer, ptr, 1).set([data]);
     return this.peek(ptr) === data ? true : false;
-  }
+  };
 
   pokew = (ptr, data) => {
-    if(!this.alignCheck(ptr, 2)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
+    if (!this.alignCheck(ptr, 2))
+      throw new Error(
+        `Memory alignment check failed for *0x${ptr.toString(16)}`
+      );
     new Uint16Array(this.memory.buffer, ptr, 1).set([data]);
     return this.peekw(ptr) === data ? true : false;
-  }
+  };
 
   poked = (ptr, data) => {
-    if(!this.alignCheck(ptr, 4)) throw new Error(`Memory alignment check failed for *0x${(ptr).toString(16)}`);
+    if (!this.alignCheck(ptr, 4))
+      throw new Error(
+        `Memory alignment check failed for *0x${ptr.toString(16)}`
+      );
     new Uint32Array(this.memory.buffer, ptr, 1).set([data]);
     return this.peekd(ptr) === data ? true : false;
-  }
+  };
 
   peekp = (ptr) => {
     return new DataView(this.memory.buffer).getUint32(ptr, true);
-  }
+  };
 
   readCharArrayExport = (ptr) => {
     return this.#wasMintPtrToString(ptr);
-  }
+  };
 
   readGlobal = (global) => {
-    let readTab = {
-      "Byte": {
-        read: (ptr) => {
-          return new DataView(this.memory.buffer).getUint8(ptr, true)
+    return {
+      Byte: {
+        read: (ptr, len = 0) => {
+          return new DataView(this.memory.buffer).getUint8(ptr, true);
         },
-        size: 1
+        size: 1,
       },
-      "Word": {
-        read: (ptr) => {
+      Word: {
+        read: (ptr, len = 0) => {
           return new DataView(this.memory.buffer).getUint16(ptr, true);
-        }, size: 2
+        },
+        size: 2,
       },
-      "Dword": {
-        read: (ptr) => {
+      Dword: {
+        read: (ptr, len = 0) => {
           return new DataView(this.memory.buffer).getUint32(ptr, true);
-        }, size: 4
+        },
+        size: 4,
       },
-      "Qword": {
-        read: (ptr) => {
+      Qword: {
+        read: (ptr, len = 0) => {
           //Align might be wrong, gotta test!!!
           return new DataView(this.memory.buffer).getBigUint64(ptr, true);
-        }, size: 8
+        },
+        size: 8,
       },
-      "String": {
-        read: (ptr) => {
+      String: {
+        read: (ptr, len = 0) => {
           return this.#wasMintPtrToString(this.peekp(ptr));
         },
-        size: 4
-      }
-    }
-
-    if (this.globals[global.name].meta.type === "Struct") {
-      let tmpObject = {}
-      let ptr = global.ptr;
-
-      for (let ft of this.globals[global.name].meta.fields.wasm) {
-        if(ft === "String") {
-          tmpObject[`${ft}+*${ptr}`] = readTab[ft].read(ptr);
-        } else {
-          tmpObject[`${ft}+${ptr}`] = readTab[ft].read(ptr);
-        }
-
-        ptr += readTab[ft].size;
-      }
-      return tmpObject;
-    }
+        size: 4,
+      },
+      Int8Array: {
+        read: (ptr, len) => {
+          return new Int8Array(this.memory.buffer.slice(ptr, ptr + length * 1));
+        },
+      },
+      Uint8Array: {
+        read: (ptr, len) => {
+          return new Uint8Array(this.memory.buffer.slice(ptr, ptr + len * 1));
+        },
+      },
+      Uint8ClampedArray: {
+        read: (ptr, len) => {
+          return new Uint8ClampedArray(
+            this.memory.buffer.slice(ptr, ptr + len * 1)
+          );
+        },
+      },
+      Int16Array: {
+        read: (ptr, len) => {
+          return new Int16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
+        },
+      },
+      Uint16Array: {
+        read: (ptr, len) => {
+          return new Uint16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
+        },
+      },
+      Int32Array: {
+        read: (ptr, len) => {
+          return new Int32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
+        },
+      },
+      Uint32Array: {
+        read: (ptr, len) => {
+          return new Uint32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
+        },
+      },
+      Float32Array: {
+        read: (ptr, len) => {
+          return new Float32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
+        },
+      },
+      Float64Array: {
+        read: (ptr, len) => {
+          return new Float64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
+        },
+      },
+      BigInt64Array: {
+        read: (ptr, len) => {
+          return new BigInt64Array(
+            this.memory.buffer.slice(ptr, ptr + len * 8)
+          );
+        },
+      },
+      BigUint64Array: {
+        read: (ptr, len) => {
+          return new BigUint64Array(
+            this.memory.buffer.slice(ptr, ptr + len * 8)
+          );
+        },
+      },
+      Struct: {
+        read: (ptr, len = 0) => {
+          //Read data and increment data_bp according to their sizes
+          let bp = ptr;
+          let tmpObject = {};
+          for (let ft of this.globals[global.name].meta.fields.wasm) {
+            if (ft === "String") {
+              tmpObject[`${ft}+*${bp}`] = readTable[ft].read(bp);
+            } else {
+              tmpObject[`${ft}+${bp}`] = readTable[ft].read(bp);
+            }
+            data_bp += readTable[ft].size;
+          }
+          return tmpObject;
+        },
+      },
+    }[this.globals[global.name].meta.type].read(global.ptr, global.meta.length || 0);
   }
 }
 

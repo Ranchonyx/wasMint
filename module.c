@@ -1,93 +1,27 @@
-#include "wasMint.h"
+#include "./wasMint/wasMint.h"
 
-typedef struct state {
-    uint8_t ip;
-    uint8_t al;
-    char* modelb;
-    uint8_t ah;
-    uint16_t ax;
-    uint32_t eax;
-    char* model;
-} WASMINT_STRUCT state_t;
+#define WIDTH 200
+#define HEIGHT 200
+#define BLOCK WIDTH * HEIGHT
 
-WASMINT_EXPORT state_t exported_state;
+WASMINT_EXPORT wmByte fb[BLOCK];
 
-//SIMD Stuff: <param_count>x<type>x<return_count>_<operation>
-WASMINT_EXPORT float* _wasMint_8xf32x4_add(float a, float b, float c, float d, float e, float f, float g, float h) {
-    __m128 v1 = wasm_f32x4_make(a, b, c, d);
-    __m128 v2 = wasm_f32x4_make(e, f, g, h);
-    __m128 v3 = wasm_f32x4_add(v1, v2);
-
-    float* s = (float*) malloc(__fl4size);
-
-    memcpy(s, (float*)&v3, __fl4size);
-
-    return s;
-}
-
-WASMINT_EXPORT float* _wasMint_8xf32x4_sub(float a, float b, float c, float d, float e, float f, float g, float h) {
-    __m128 v1 = wasm_f32x4_make(a, b, c, d);
-    __m128 v2 = wasm_f32x4_make(e, f, g, h);
-    __m128 v3 = wasm_f32x4_sub(v1, v2);
-
-    float* s = (float*) malloc(__fl4size);
-
-    memcpy(s, (float*)&v3, __fl4size);
-
-    return s;
-}
-
-WASMINT_EXPORT float* _wasMint_8xf32x4_div(float a, float b, float c, float d, float e, float f, float g, float h) {
-    __m128 v1 = wasm_f32x4_make(a, b, c, d);
-    __m128 v2 = wasm_f32x4_make(e, f, g, h);
-    __m128 v3 = wasm_f32x4_div(v1, v2);
-
-    float* s = (float*) malloc(__fl4size);
-
-    memcpy(s, (float*)&v3, __fl4size);
-
-    return s;
-}
-
-WASMINT_EXPORT float* _wasMint_8xf32x4_mul(float a, float b, float c, float d, float e, float f, float g, float h) {
-    __m128 v1 = wasm_f32x4_make(a, b, c, d);
-    __m128 v2 = wasm_f32x4_make(e, f, g, h);
-    __m128 v3 = wasm_f32x4_mul(v1, v2);
-
-    float* s = (float*) malloc(__fl4size);
-
-    memcpy(s, (float*)&v3, __fl4size);
-
-    return s;
-}
-
-WASMINT_EXPORT float* _wasMint_arrayIOTest(float* a, size_t len) {
-    float* b = (float*) malloc(len * sizeof(float));
-    for(size_t i = 0; i < len; i++) {
-        b[i] = a[i] * 2;
+wmRawPointer fill(wmRawPointer s, wmByte c, uint32_t len) {
+    uint8_t* p = s;
+    while(len--) {
+        *p++ = (wmByte) c;
     }
-    return b;
+    return s;
 }
 
-WASMINT_EXPORT uint32_t* _wasMint_arrayXOR(uint32_t* a, size_t alen, uint32_t* b, size_t blen) {
-    size_t retlen = alen > blen ? blen : alen;
-    uint32_t* c = (uint32_t*) malloc(retlen * sizeof(uint32_t));
-    for(size_t i = 0; i < retlen; i++) {
-        c[i] = a[i] ^ b[i];
-    }
-    return c;
+WASMINT_EXPORT void next_frame(uint8_t color) {
+    fill(fb, color, BLOCK);
+    return;
 }
 
-WASMINT_EXPORT void WMINIT() {
-    wmString startup_message = "Init!";
-    _wasMint_print(startup_message);
-
-    exported_state.ip = 0xFF;
-    exported_state.al = 'A';
-    exported_state.modelb = "This program cannot be run in DOS mode kekw";
-    exported_state.ah = 'B';
-    exported_state.ax = 0xAAAA;
-    exported_state.eax = 0xFFFFFFFF;
-    exported_state.model = "Intel (r) Mediokrum Rev. 2 @ 3.1415 gHz";
+WMENTRY() {
+    wmString msg = "FB module initialised!";
+    _wasMint_print(msg);
+    fill(fb, '0', BLOCK);
     return;
 }
