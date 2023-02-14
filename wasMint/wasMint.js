@@ -105,11 +105,13 @@ class wasMintModule {
         read: (ptr, len) => {
             return new Int8Array(this.memory.buffer.slice(ptr, ptr + length * 1));
         },
+        ctor: Int8Array
     },
     Uint8Array: {
         read: (ptr, len) => {
             return new Uint8Array(this.memory.buffer.slice(ptr, ptr + len * 1));
         },
+        ctor: Uint8Array
     },
     Uint8ClampedArray: {
         read: (ptr, len) => {
@@ -117,46 +119,55 @@ class wasMintModule {
                 this.memory.buffer.slice(ptr, ptr + len * 1)
             );
         },
+        ctor: Uint8ClampedArray
     },
     Int16Array: {
         read: (ptr, len) => {
             return new Int16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
         },
+        ctor: Int16Array
     },
     Uint16Array: {
         read: (ptr, len) => {
             return new Uint16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
         },
+        ctor: Uint16Array
     },
     Int32Array: {
         read: (ptr, len) => {
             return new Int32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
         },
+        ctor: Int32Array
     },
     Uint32Array: {
         read: (ptr, len) => {
             return new Uint32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
         },
+        ctor: Uint32Array
     },
     Float32Array: {
         read: (ptr, len) => {
             return new Float32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
         },
+        ctor: Float32Array
     },
     Float64Array: {
         read: (ptr, len) => {
             return new Float64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
         },
+        ctor: Float64Array
     },
     BigInt64Array: {
         read: (ptr, len) => {
             return new BigInt64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
         },
+        ctor: BigInt64Array
     },
     BigUint64Array: {
         read: (ptr, len) => {
             return new BigUint64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
         },
+        ctor: BigUint64Array
     },
     Struct: {
         read: (ptr, len = 0) => {
@@ -750,7 +761,7 @@ class wasMintModule {
   #wasMintArrayToPtr(array, type) {
     let ptr = this.#malloc(array.byteLength);
 
-    let buffer = new this.#typedArrayCtorTable[type](
+    let buffer = new this.#typeConversionTable[type].ctor(
       this.memory.buffer,
       ptr,
       array.length,
