@@ -102,9 +102,9 @@
       },
       "showCallback": false
     },
-    "next_frame": {
+    "render": {
       "params": [
-        "Number"
+        
       ],
       "return": {
         "type": "Void",
@@ -115,7 +115,7 @@
   "globals": {
     "fb": {
       "type": "Uint8Array",
-      "length": 20000
+      "length": -1
     },
     "controlRegister": {
       "type": "Number"
@@ -126,5 +126,8 @@
         "wasm": ["Byte", "Byte", "String", "Byte", "Word", "Dword", "String"]
       }
     }
+  },
+  "display": {
+    
   }
 }

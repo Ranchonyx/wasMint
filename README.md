@@ -128,9 +128,8 @@ wasMint comes with a C header file, `wasMint.h` which contains basic necessary f
 > Execute `build.ps1`
 
 #### Linux systems
-> Time to wait since I have not yet done anything to make this shebang run on linux systems, however it should be very easy for you to port the build scripts and optain a linux version of emsdk.
+> Execute `build.sh`
 
-### "You're my heart, you're my soul, brother func-tion-config-uration"
 #### The function configuration in-depth
 
 ##### Valid configuration datatypes listing:
@@ -208,3 +207,16 @@ wasMint comes with a C header file, `wasMint.h` which contains basic necessary f
 > `AI < A3 ? A1 : A3` denotes that if _Argument 1_ is less than _Argument 3_, _Argument 1_ shall be the return length, otherwise it shall be _Argument 3_.
 
 As a matter of fact, wasMint implements similar behaviour when the `J` is replaced by a `M`, which then denotes that the return length of this function shall be determined by a mathematical expression.
+
+### Display
+
+Since...now, wasMint supports "canvas-display" output.
+By default, a wasMint module automatically looks for an HTML Canvas Element with the id `wasMintModuleScreen`.
+
+Display Functions
+
+- > `renderStandby()` renders a "Waiting for RGBA Input" text on a yellow-ish background on the display canvas.
+- > `initContext() & initContextFast()` initialise the display's 2d context either using Hardware Acceleration or using a (potentially, allegedly, maybe) "faster" software renderer and then render a standby image.
+- > `flatFrame(Uint8ClampedArray)` Renders a whole frame based on a linear framebuffer array laid out like [R,G,B,A,R,G,B,A, ...].
+- > `nestedFrame(ArrayOfUint8ClampedArrays)` Renders a whole frame based on a nested linear framebuffer array laid out like [[R,G,B,A], [R,G,B,A], ...].
+- > `pixel(x, y, pixel)` Renders a single pixel at the coordinates specified by `x` and `y` with the RGBA data laid out like [R,G,B,A].

@@ -5,7 +5,6 @@
   <script src="./wasMint/wasMint.js"></script>
   <script>
     var Module = null;
-    var Screen = null;
 
     window.onload = async () => {
       addEventListener("wasMintError", (details) => {
@@ -36,14 +35,12 @@
         .then(config => {
           Module = new wasMintModule("module.wasm", config, false, false);
         });
-        Screen = document.getElementById("screen").getContext("2d");
-
     };
   </script>
 </head>
 
 <body>
-  <canvas id="screen" width="480" height="240"></canvas>
+  <canvas id="wasMintModuleScreen" width="480" height="240"></canvas>
 </body>
 
 </html>

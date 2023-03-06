@@ -52,10 +52,14 @@ class wasMintModule {
   #internalModuleInstance = {};
   exports = {};
 
+  #waitingForFb = null;
+
   #growMemoryOnAllocWarning = false;
   #stateInitialised = false;
 
-  #debugPrint = () => {};
+  #debugPrint = () => { };
+
+  display = null;
 
   #importConfig = {
     wasi_snapshot_preview1: {
@@ -65,6 +69,12 @@ class wasMintModule {
       },
     },
     env: {
+      _wasMint_display_notify: (ptr) => {
+        if (this.fbEnabled) {
+          //console.log(this.#typeConversionTable.Number.read(ptr));
+          this.#wmEmit("wasMintFramebufferUpdate", "", "")
+        }
+      },
       _wasMint_js_print: (ptr, len) => this.#debugPrint(ptr, len),
       emscripten_notify_memory_growth: (val) =>
         console.info(`Memory growth! ${val}`),
@@ -74,154 +84,143 @@ class wasMintModule {
   #malloc = () => {
     return 0;
   };
-  #free = () => {};
+  #free = () => { };
+
+  #displayControlTable = {
+    enable: 0x00000060
+  }
 
   #typeConversionTable = {
     Byte: {
-        read: (ptr, len = 0) => {
-            return new DataView(this.memory.buffer).getUint8(ptr, true);
-        },
-        size: 1,
+      read: (ptr, len = 0) => {
+        return new DataView(this.memory.buffer).getUint8(ptr, true);
+      },
+      size: 1,
     },
     Word: {
-        read: (ptr, len = 0) => {
-            return new DataView(this.memory.buffer).getUint16(ptr, true);
-        },
-        size: 2,
+      read: (ptr, len = 0) => {
+        return new DataView(this.memory.buffer).getUint16(ptr, true);
+      },
+      size: 2,
     },
     Dword: {
-        read: (ptr, len = 0) => {
-            return new DataView(this.memory.buffer).getUint32(ptr, true);
-        },
-        size: 4,
+      read: (ptr, len = 0) => {
+        return new DataView(this.memory.buffer).getUint32(ptr, true);
+      },
+      size: 4,
     },
     Qword: {
-        read: (ptr, len = 0) => {
-            return new DataView(this.memory.buffer).getBigUint64(ptr, true);
-        },
-        size: 8,
+      read: (ptr, len = 0) => {
+        return new DataView(this.memory.buffer).getBigUint64(ptr, true);
+      },
+      size: 8,
     },
     Int8Array: {
-        read: (ptr, len) => {
-            return new Int8Array(this.memory.buffer.slice(ptr, ptr + length * 1));
-        },
-        ctor: Int8Array
+      read: (ptr, len) => {
+        return new Int8Array(this.memory.buffer.slice(ptr, ptr + length * 1));
+      },
+      ctor: Int8Array
     },
     Uint8Array: {
-        read: (ptr, len) => {
-            return new Uint8Array(this.memory.buffer.slice(ptr, ptr + len * 1));
-        },
-        ctor: Uint8Array
+      read: (ptr, len) => {
+        return new Uint8Array(this.memory.buffer.slice(ptr, ptr + len * 1));
+      },
+      ctor: Uint8Array
     },
     Uint8ClampedArray: {
-        read: (ptr, len) => {
-            return new Uint8ClampedArray(
-                this.memory.buffer.slice(ptr, ptr + len * 1)
-            );
-        },
-        ctor: Uint8ClampedArray
+      read: (ptr, len) => {
+        return new Uint8ClampedArray(
+          this.memory.buffer.slice(ptr, ptr + len * 1)
+        );
+      },
+      ctor: Uint8ClampedArray
     },
     Int16Array: {
-        read: (ptr, len) => {
-            return new Int16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
-        },
-        ctor: Int16Array
+      read: (ptr, len) => {
+        return new Int16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
+      },
+      ctor: Int16Array
     },
     Uint16Array: {
-        read: (ptr, len) => {
-            return new Uint16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
-        },
-        ctor: Uint16Array
+      read: (ptr, len) => {
+        return new Uint16Array(this.memory.buffer.slice(ptr, ptr + len * 2));
+      },
+      ctor: Uint16Array
     },
     Int32Array: {
-        read: (ptr, len) => {
-            return new Int32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
-        },
-        ctor: Int32Array
+      read: (ptr, len) => {
+        return new Int32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
+      },
+      ctor: Int32Array
     },
     Uint32Array: {
-        read: (ptr, len) => {
-            return new Uint32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
-        },
-        ctor: Uint32Array
+      read: (ptr, len) => {
+        return new Uint32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
+      },
+      ctor: Uint32Array
     },
     Float32Array: {
-        read: (ptr, len) => {
-            return new Float32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
-        },
-        ctor: Float32Array
+      read: (ptr, len) => {
+        return new Float32Array(this.memory.buffer.slice(ptr, ptr + len * 4));
+      },
+      ctor: Float32Array
     },
     Float64Array: {
-        read: (ptr, len) => {
-            return new Float64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
-        },
-        ctor: Float64Array
+      read: (ptr, len) => {
+        return new Float64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
+      },
+      ctor: Float64Array
     },
     BigInt64Array: {
-        read: (ptr, len) => {
-            return new BigInt64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
-        },
-        ctor: BigInt64Array
+      read: (ptr, len) => {
+        return new BigInt64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
+      },
+      ctor: BigInt64Array
     },
     BigUint64Array: {
-        read: (ptr, len) => {
-            return new BigUint64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
-        },
-        ctor: BigUint64Array
+      read: (ptr, len) => {
+        return new BigUint64Array(this.memory.buffer.slice(ptr, ptr + len * 8));
+      },
+      ctor: BigUint64Array
     },
     Struct: {
-        read: (ptr, len = 0) => {
-            //Read data and increment data_bp according to their sizes
-            let bp = ptr;
-            let tmpObject = {};
-            for (let ft of this.globals[global.name].meta.fields.wasm) {
-                if (ft === "String") {
-                    tmpObject[`${ft}+*${bp}`] = readTable[ft].read(bp);
-                } else {
-                    tmpObject[`${ft}+${bp}`] = readTable[ft].read(bp);
-                }
-                data_bp += readTable[ft].size;
-            }
-            return tmpObject;
-        },
+      read: (ptr, len = 0) => {
+        //Read data and increment data_bp according to their sizes
+        let bp = ptr;
+        let tmpObject = {};
+        for (let ft of this.globals[global.name].meta.fields.wasm) {
+          if (ft === "String") {
+            tmpObject[`${ft}+*${bp}`] = this.#typeConversionTable[ft].read(bp);
+          } else {
+            tmpObject[`${ft}+${bp}`] = this.#typeConversionTable[ft].read(bp);
+          }
+          data_bp += this.#typeConversionTable[ft].size;
+        }
+        return tmpObject;
+      },
     },
     Number: {
-        read: (ptr, len = 0) => {
-            return new Number(ptr);
-        }
+      read: (ptr, len = 0) => {
+        return new Number(ptr);
+      }
     },
     String: {
-        read: (ptr, len = 0, fromFunction = false) => {
-            return fromFunction ? this.#wasMintPtrToString() : this.#wasMintPtrToString(this.peekp(ptr));
-        },
-        size: 4,
+      read: (ptr, len = 0, fromFunction = false) => {
+        return fromFunction ? this.#wmPtrToString() : this.#wmPtrToString(this.peekp(ptr));
+      },
+      size: 4,
     },
     BigInt: {
-        read: (ptr, len = 0) => {
-            return BigInt(ptr);
-        }
+      read: (ptr, len = 0) => {
+        return BigInt(ptr);
+      }
     },
-    Undefined: {
-        read: (ptr, len = 0) => {
-            return undefined;
-        }
+    Void: {
+      read: (ptr, len = 0) => {
+        return 0;
+      }
     }
-};
-
-#typedArrayCtorTable = {
-  Int8Array: Int8Array,
-  Uint8Array: Uint8Array,
-  Uint8ClampedArray: Uint8ClampedArray,
-  Int16Array: Int16Array,
-  Uint16Array: Uint16Array,
-  Int32Array: Int32Array,
-  Uint32Array: Uint32Array,
-  Float32Array: Float32Array,
-  Float64Array: Float64Array,
-  BigInt64Array: BigInt64Array,
-  BigUint64Array: BigUint64Array,
-};
-
+  };
 
   constructor(
     wasmPath,
@@ -230,23 +229,26 @@ class wasMintModule {
     growMemoryOnAllocWarning = false,
     memory = new WebAssembly.Memory({
       initial: 16,
-      maximum: 16,
+      maximum: 32,
       shared: false,
     }),
     debugPrint = (ptr, len) => {
       console.log(
-        `debugPrint(${len}b@${ptr}): ${this.#wasMintPtrToString(ptr)}`
+        `debugPrint(${len}b@${ptr}): ${this.#wmPtrToString(ptr)}`
       );
       this.#free(ptr);
-    }
+    },
+    display = new wasMintDisplay(document.getElementById("wasMintModuleScreen"))
   ) {
     if (!("WebAssembly" in window)) {
-      alert("you need a browser with wasm support enabled :(");
+      alert("You need a browser with wasm support enabled :(");
     }
 
     let tmpGlobals = {};
     let tmpFunctions = {};
     let __functions__ = {};
+
+    this.display = display;
 
     this.#growMemoryOnAllocWarning = growMemoryOnAllocWarning;
 
@@ -266,7 +268,7 @@ class wasMintModule {
     this.globals = {};
 
     //Load and instantiate the WASM module
-    this.#wasMintDispatchEvent(
+    this.#wmEmit(
       "wasMintInfo",
       "INFO",
       `Loading WASM from ${wasmPath}...`
@@ -277,7 +279,7 @@ class wasMintModule {
         this.#importConfig
       )
         .then((obj) => {
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintWASMLoaded",
             "INFO",
             "WASM module loaded."
@@ -286,7 +288,7 @@ class wasMintModule {
           this.#internalModuleInstance = obj.instance;
           this.exports = obj.instance.exports;
 
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintInfo",
             "INFO",
             "Determining types of exported data..."
@@ -296,21 +298,21 @@ class wasMintModule {
           Object.entries(this.#internalModuleInstance.exports).forEach(
             (entry) => {
               if (__protoClassOf(entry[1]) === "Function") {
-                this.#wasMintDispatchEvent(
+                this.#wmEmit(
                   "wasMintInfo",
                   "INFO",
                   `${entry[0]} => Function`
                 );
                 tmpFunctions[entry[0]] = entry[1];
               } else if (__protoClassOf(entry[1]) === "Global") {
-                this.#wasMintDispatchEvent(
+                this.#wmEmit(
                   "wasMintInfo",
                   "INFO",
                   `${entry[0]} => Global`
                 );
                 tmpGlobals[entry[0]] = entry[1];
               } else {
-                this.#wasMintDispatchEvent(
+                this.#wmEmit(
                   "wasMintInfo",
                   "INFO",
                   `${entry[0]} => Unassigned`
@@ -322,8 +324,8 @@ class wasMintModule {
 
           //Firstly check if the WASM Module contains signatures for malloc and free
           if (
-            this.#wasMintHasSignature("malloc") &&
-            this.#wasMintHasSignature("free")
+            this.#wmHasExportSig("malloc") &&
+            this.#wmHasExportSig("free")
           ) {
             //Shim malloc and free calls to display debug output
             this.#free = (ptr) => {
@@ -364,13 +366,13 @@ class wasMintModule {
               return this.memory._grow(pages);
             };
 
-            this.#wasMintDispatchEvent(
+            this.#wmEmit(
               "wasMintInfo",
               "INFO",
               "malloc & free found and shimmed."
             );
           } else {
-            this.#wasMintDispatchEvent(
+            this.#wmEmit(
               "wasMintError",
               "ERROR",
               "WASM Module is missing export signatures for 'malloc', 'free' or 'memory' !"
@@ -380,19 +382,19 @@ class wasMintModule {
           //If the module exports a "main" method assign it, if not assign undefined
           this.potentialEntryPoint = undefined;
 
-          if (this.#wasMintHasSignature("WMINIT")) {
+          if (this.#wmHasExportSig("WMINIT")) {
             this.potentialEntryPoint = this.exports.WMINIT;
             this.init = (...initArgs) => {
               if (this.#stateInitialised === false) {
                 this.potentialEntryPoint(initArgs);
-                this.#wasMintDispatchEvent(
+                this.#wmEmit(
                   "wasMintInfo",
                   "INFO",
                   "WASM Module initialised."
                 );
                 this.#stateInitialised = true;
               } else {
-                this.#wasMintDispatchEvent(
+                this.#wmEmit(
                   "wasMintInfo",
                   "INFO",
                   "WASM Module already initialised."
@@ -401,48 +403,45 @@ class wasMintModule {
             };
           }
 
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintInfo",
             "INFO",
             "Configuring WASM functions..."
           );
 
           //Assign metadata to functions
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate metadata for ${
-              Object.keys(this.#moduleConfig.functions).length
+            `Attempting to generate metadata for ${Object.keys(this.#moduleConfig.functions).length
             } configurable functions...`
           );
           for (let funKey in tmpFunctions) {
             if (Object.keys(this.#moduleConfig.functions).includes(funKey)) {
               __functions__[funKey] = this.#moduleConfig.functions[funKey];
               __functions__[funKey]._function = tmpFunctions[funKey];
-              this.#wasMintDispatchEvent(
+              this.#wmEmit(
                 "wasMintInfo",
                 "INFO",
                 `Generated metadata for $${funKey}!`
               );
             }
           }
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintInfo",
             "INFO",
-            `Finished generation of ${
-              Object.keys(__functions__).length
+            `Finished generation of ${Object.keys(__functions__).length
             } sets of metadata!`
           );
 
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintInfo",
             "INFO",
-            `Attempting to generate interop layers for ${
-              Object.keys(__functions__).length
+            `Attempting to generate interop layers for ${Object.keys(__functions__).length
             } exported functions...`
           );
           for (let funKey in __functions__) {
-            this.#wasMintDispatchEvent(
+            this.#wmEmit(
               "wasMintInfo",
               "INFO",
               `Generated Interop layer for $${funKey}!`
@@ -452,10 +451,9 @@ class wasMintModule {
                 __functions__[funKey].callback ??= (args) =>
                   console.log(`Callback ${funKey} := ${args}`);
                 __functions__[funKey].callback(
-                  `$${funKey}(${
-                    primaryArgs.join(", ").length > 512
-                      ? `${primaryArgs.join(", ").substring(0, 512)}...`
-                      : primaryArgs.join(", ")
+                  `$${funKey}(${primaryArgs.join(", ").length > 512
+                    ? `${primaryArgs.join(", ").substring(0, 512)}...`
+                    : primaryArgs.join(", ")
                   })`
                 );
               }
@@ -477,8 +475,7 @@ class wasMintModule {
                   throw new Error(
                     `Invalid parameter type of [${__protoClassOf(
                       primaryArgs[i]
-                    )}] instead of [${
-                      __functions__[funKey].params[i]
+                    )}] instead of [${__functions__[funKey].params[i]
                     }] at [${i}] for [${funKey}]`
                   );
                 }
@@ -495,11 +492,11 @@ class wasMintModule {
                       tmpArgs.push(BigInt(arg));
                       break;
                     case "String":
-                      tmpArgs.push(this.#wasMintStringToPtr(arg));
+                      tmpArgs.push(this.#wmAllocString(arg));
                       break;
                     default:
                       tmpArgs.push(
-                        this.#wasMintArrayToPtr(arg, __protoClassOf(arg))
+                        this.#wmAllocArray(arg, __protoClassOf(arg))
                       );
                       break;
                   }
@@ -510,78 +507,7 @@ class wasMintModule {
               let primaryResult = __functions__[funKey]._function(...finalArgs);
 
               let castResult = (ptr, len) => {
-                return this.#typeConversionTable[__functions__[funKey].return.type].read(ptr, len);
-                switch (__functions__[funKey].return.type) {
-                  case "Number":
-                    return new Number(ptr);
-                    break;
-                  case "BigInt":
-                    return BigInt(ptr);
-                  case "String":
-                    return this.#wasMintPtrToString(ptr);
-                    break;
-                  case "Int8Array":
-                    return new Int8Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 1)
-                    );
-                    break;
-                  case "Uint8Array":
-                    return new Uint8Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 1)
-                    );
-                    break;
-                  case "Uint8ClampedArray":
-                    return new Uint8ClampedArray(
-                      this.memory.buffer.slice(ptr, ptr + len * 1)
-                    );
-                    break;
-                  case "Int16Array":
-                    return new Int16Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 2)
-                    );
-                    break;
-                  case "Uint16Array":
-                    return new Uint16Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 2)
-                    );
-                    break;
-                  case "Int32Array":
-                    return new Int32Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 4)
-                    );
-                    break;
-                  case "Uint32Array":
-                    return new Uint32Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 4)
-                    );
-                    break;
-                  case "Float32Array":
-                    return new Float32Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 4)
-                    );
-                    break;
-                  case "Float64Array":
-                    return new Float64Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 8)
-                    );
-                    break;
-                  case "BigInt64Array":
-                    return new BigInt64Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 8)
-                    );
-                    break;
-                  case "BigUint64Array":
-                    return new BigUint64Array(
-                      this.memory.buffer.slice(ptr, ptr + len * 8)
-                    );
-                    break;
-                  case "Undefined":
-                    return undefined;
-                    break;
-                  default:
-                    return ptr;
-                    break;
-               }
+                return this.#typeConversionTable[__functions__[funKey].return.type].read(ptr ?? 0, len);
               };
 
               //Let castResult decide what should be returned
@@ -595,10 +521,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                      (returnLength = returnLength.replace(
-                        e[0],
-                        finalArgs[e[0].split("")[1]]
-                      ))
+                    (returnLength = returnLength.replace(
+                      e[0],
+                      finalArgs[e[0].split("")[1]]
+                    ))
                   );
                   returnLength = returnLength
                     .replaceAll(" ", "")
@@ -617,10 +543,10 @@ class wasMintModule {
                   returnLength = returnLength.substring(2);
                   strArgsToIndices.forEach(
                     (e) =>
-                      (returnLength = returnLength.replace(
-                        e[0],
-                        finalArgs[e[0].split("")[1]]
-                      ))
+                    (returnLength = returnLength.replace(
+                      e[0],
+                      finalArgs[e[0].split("")[1]]
+                    ))
                   );
                   returnLength = Function(
                     `"use strict";return ${returnLength};`
@@ -644,8 +570,7 @@ class wasMintModule {
                 throw new Error(
                   `Invalid return type configuration of [${__protoClassOf(
                     finalResult
-                  )}] instead of [${
-                    __functions__[funKey].return.type
+                  )}] instead of [${__functions__[funKey].return.type
                   }] for [${funKey}]`
                 );
               } else {
@@ -653,16 +578,15 @@ class wasMintModule {
               }
             };
           }
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintInfo",
             "INFO",
-            `Finished generation of interop layers for ${
-              Object.keys(__functions__).length
+            `Finished generation of interop layers for ${Object.keys(__functions__).length
             } exported functions!`
           );
         })
         .catch((err) => {
-          this.#wasMintDispatchEvent(
+          this.#wmEmit(
             "wasMintError",
             "ERROR",
             `Error occured during WASM loading: ${err} !`
@@ -705,17 +629,17 @@ class wasMintModule {
 
       console.table("Configured function listing", this.functions);
       console.table("Exported globals", this.globals);
-      this.#wasMintDispatchEvent(
+      this.#wmEmit(
         "wasMintWASMConfigured",
         "INFO",
         "WASM Module configured."
       );
       this.hash = __hashOf(this);
-      Object.freeze(this);
+      //Object.freeze(this);
     })();
   }
 
-  #wasMintDispatchEvent(name, type, msg) {
+  #wmEmit(name, type, msg) {
     if (type === "ERROR") {
       console.trace();
     }
@@ -729,25 +653,33 @@ class wasMintModule {
     );
   }
 
-  #wasMintHasSignature(sig) {
+  #wmHasExportSig(sig) {
     return Object.keys(this.exports).includes(sig);
   }
 
-  #wasMintStrlen(ptr) {
+  #wmHasFunSig(sig) {
+    return Object.keys(this.functions).includes(sig);
+  }
+
+  #wmHasGlbSig(sig) {
+    return Object.keys(this.globals).includes(sig);
+  }
+
+  #wmStrlen(ptr) {
     return new Uint8Array(
       this.memory.buffer.slice(ptr, this.memory.buffer.byteLength)
     ).indexOf(0);
   }
 
-  #wasMintPtrToString(ptr) {
+  #wmPtrToString(ptr) {
     let dec = new TextDecoder();
     let string = dec.decode(
-      new Uint8Array(this.memory.buffer, ptr, this.#wasMintStrlen(ptr))
+      new Uint8Array(this.memory.buffer, ptr, this.#wmStrlen(ptr))
     );
     return string;
   }
 
-  #wasMintStringToPtr(string) {
+  #wmAllocString(string) {
     let enc = new TextEncoder();
     let bytes = enc.encode(string);
 
@@ -758,7 +690,7 @@ class wasMintModule {
     return ptr;
   }
 
-  #wasMintArrayToPtr(array, type) {
+  #wmAllocArray(array, type) {
     let ptr = this.#malloc(array.byteLength);
 
     let buffer = new this.#typeConversionTable[type].ctor(
@@ -771,8 +703,6 @@ class wasMintModule {
     return ptr;
   }
 
-  #wasMintIPC_J2M(str) {}
-
   /**
    * Check the alignment of `ptr` via `ptr % align === 0`
    * @param {number} ptr
@@ -780,7 +710,7 @@ class wasMintModule {
    * @returns true | false
    */
   alignCheck = (ptr, align) => {
-    return ptr % align === 0 ? true : false;
+    return ptr % align === 0;
   };
 
   /**
@@ -818,7 +748,7 @@ class wasMintModule {
 
   poke = (ptr, data) => {
     new Uint8Array(this.memory.buffer, ptr, 1).set([data]);
-    return this.peek(ptr) === data ? true : false;
+    return this.peek(ptr) === data;
   };
 
   pokew = (ptr, data) => {
@@ -827,7 +757,7 @@ class wasMintModule {
         `Memory alignment check failed for *0x${ptr.toString(16)}`
       );
     new Uint16Array(this.memory.buffer, ptr, 1).set([data]);
-    return this.peekw(ptr) === data ? true : false;
+    return this.peekw(ptr) === data;
   };
 
   poked = (ptr, data) => {
@@ -836,7 +766,7 @@ class wasMintModule {
         `Memory alignment check failed for *0x${ptr.toString(16)}`
       );
     new Uint32Array(this.memory.buffer, ptr, 1).set([data]);
-    return this.peekd(ptr) === data ? true : false;
+    return this.peekd(ptr) === data;
   };
 
   peekp = (ptr) => {
@@ -844,11 +774,52 @@ class wasMintModule {
   };
 
   readCharArrayExport = (ptr) => {
-    return this.#wasMintPtrToString(ptr);
+    return this.#wmPtrToString(ptr);
   };
 
   readGlobal = (global) => {
     return [this.globals[global.name].meta.type].read(global.ptr, global.meta.length || 0);
+  }
+
+  //Screen stuff...
+  display_init = () => {
+    if ((this.#wmHasGlbSig("fb") === false) || (this.#wmHasFunSig("render") === false)) {
+      throw new Error("Unable to initialise display since either no 'fb' global or no 'render' function was exported!");
+      return;
+    }
+
+    this.enableWASMFramebuffer = () => {
+      this.fbEnabled = true;
+      return (this.poke(this.#displayControlTable.enable, 0x01));
+    }
+
+    this.disableWASMFramebuffer = () => {
+      this.fbEnabled = false;
+      return (this.poke(this.#displayControlTable.enable, 0x00));
+    }
+
+    this.wmRenderFbAndRegisterInt = (key = "Escape", dspStandby = this.display.renderStandby, fbRead = this.#typeConversionTable["Uint8ClampedArray"].read, fbFrame = this.display.flatFrame, fbDisable = this.disableWASMFramebuffer, fbPtr = this.globals["fb"].ptr, fbLen = this.display.byteLength) => {
+
+      if (this.fbEnabled) {
+        let renderFb = () => {
+          fbFrame(fbRead(fbPtr, fbLen));
+        }
+        addEventListener("wasMintFramebufferUpdate", renderFb)
+        addEventListener("keydown", function interrupt(event) {
+          if (event.key === key) {
+            removeEventListener("keydown", interrupt);
+            removeEventListener("wasMintFramebufferUpdate", renderFb);
+            fbDisable();
+            dspStandby();
+          }
+        })
+        this.functions["render"]();
+        return 0;
+      }
+      return -1;
+    }
+
+    return 0;
   }
 }
 
@@ -928,4 +899,56 @@ class wasMintModuleManager {
   getWASMModuleByName(name) {
     return this.__modules__.find((mod) => mod.name === name)?.module ?? null;
   }
+}
+
+class wasMintDisplay {
+  constructor(pCanvas) {
+    this.canvas = pCanvas;
+    this.width = pCanvas.width;
+    this.height = pCanvas.height;
+
+    this.pixelLenght = this.width * this.height;
+    this.byteLength = this.pixelLenght * 4; //RGBA, 1 byte for each channel
+
+    this.initContext(this.canvas);
+    this.ctx.moveTo(0, 0);
+  }
+
+  renderStandby() {
+    this.nestedFrame(new Array((240 * 480)).fill([0xFF, 0xCC, 0x00, 0xFF], 0));
+    this.ctx.font = "30px sans-serif";
+    this.ctx.textAlign = "center";
+    this.ctx.fillText("Waiting for RGBA Input", this.width / 2, this.height / 2);
+  }
+
+  initContext() {
+    this.ctx = this.canvas.getContext("2d");
+    this.renderStandby()
+  }
+
+  initContextFast() {
+    this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
+    this.renderStandby();
+  }
+
+  flatFrame(u8Arr) {
+    let d = this.ctx.getImageData(0, 0, this.width, this.height);
+    d.data.set(u8Arr);
+    this.ctx.putImageData(d, 0, 0);
+  }
+
+  nestedFrame(arrOfU8Arr) {
+    let d = this.ctx.getImageData(0, 0, this.width, this.height);
+    d.data.set(arrOfU8Arr.flat(Infinity));
+    this.ctx.putImageData(d, 0, 0);
+  }
+
+  pixel(x, y, pixel) {
+    let d = this.ctx.createImageData(1, 1);
+    pixel[3] ??= 0xFF;
+    d.data.set(pixel);
+
+    this.ctx.putImageData(d, x, y);
+  }
+
 }
